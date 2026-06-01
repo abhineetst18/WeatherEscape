@@ -60,7 +60,10 @@
     "beach": "Strand",
     "hiking": "Vandring",
     "attraction": "Attraktion",
-    "custom": "Egen"
+    "custom": "Egen",
+    "loadFallback": "Ladda destinationer i närheten",
+    "adjustRadius": "Justera radien",
+    "expandRadius": "Prova att öka radien med + knappen"
   },
   "settings": {
     "title": "Inställningar",

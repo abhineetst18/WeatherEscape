@@ -1,8 +1,7 @@
 <script>
   import { t } from '../stores/i18nStore.svelte.js';
   import { weather, toggleDay, setTimePeriod, fetchDestinationWeather } from '../stores/weatherStore.svelte.js';
-  import { settings, getActiveLocation, updateSetting } from '../stores/settingsStore.svelte.js';
-  import { fallbackDestinationsFor } from '../services/destinationService.js';
+  import { settings, updateSetting } from '../stores/settingsStore.svelte.js';
   import WeatherCard from './WeatherCard.svelte';
 
   let { onSelectDestination = () => {} } = $props();
@@ -158,22 +157,11 @@
           {/each}
         </div>
       {:else}
-            <div class="empty-state">
-              <p class="empty-icon">🌤️</p>
-              <p class="empty-text">{t('destinations.empty')}</p>
-              <div class="empty-actions">
-                <button class="btn" onclick={async () => {
-                  const loc = getActiveLocation();
-                  const radiusKm = (settings.drivingRadiusMinutes / 60) * 70;
-                  const list = await fallbackDestinationsFor(loc.lat, loc.lon, radiusKm);
-                  if (list && list.length > 0) {
-                    // fetch weather for the fallback list
-                    await fetchDestinationWeather(list);
-                  }
-                }}>{t('destinations.loadFallback')}</button>
-                <button class="btn" onclick={() => alert(t('destinations.adjustRadius'))}>{t('destinations.adjustRadius')}</button>
-              </div>
-            </div>
+        <div class="empty-state">
+          <p class="empty-icon">🌤️</p>
+          <p class="empty-text">{t('destinations.empty')}</p>
+          <p class="empty-hint">{t('destinations.expandRadius')}</p>
+        </div>
       {/if}
     </div>
   {/if}
@@ -247,6 +235,7 @@
   .loading-state, .empty-state { text-align: center; padding: 20px; color: var(--text-dim); font-size: 13px; }
   .empty-icon { font-size: 36px; margin-bottom: 8px; }
   .empty-text { font-size: 13px; }
+  .empty-hint { font-size: 11px; opacity: 0.6; margin-top: 6px; }
 
   @media (min-width: 768px) {
     .panel {

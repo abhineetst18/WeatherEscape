@@ -60,7 +60,10 @@
     "beach": "Strand",
     "hiking": "Vandring",
     "attraction": "Attraktion",
-    "custom": "Brugerdefineret"
+    "custom": "Brugerdefineret",
+    "loadFallback": "Indlæs destinationer i nærheden",
+    "adjustRadius": "Juster radius",
+    "expandRadius": "Prøv at øge radius med + knappen"
   },
   "settings": {
     "title": "Indstillinger",

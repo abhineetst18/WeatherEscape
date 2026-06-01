@@ -60,7 +60,10 @@
     "beach": "Strand",
     "hiking": "Fjelltur",
     "attraction": "Attraksjon",
-    "custom": "Egendefinert"
+    "custom": "Egendefinert",
+    "loadFallback": "Last inn reisemål i nærheten",
+    "adjustRadius": "Juster radius",
+    "expandRadius": "Prøv å øke radius med + knappen"
   },
   "settings": {
     "title": "Innstillinger",

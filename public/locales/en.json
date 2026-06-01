@@ -60,7 +60,10 @@
     "beach": "Beach",
     "hiking": "Hiking",
     "attraction": "Attraction",
-    "custom": "Custom"
+    "custom": "Custom",
+    "loadFallback": "Load nearby destinations",
+    "adjustRadius": "Adjust radius",
+    "expandRadius": "Try increasing the radius with + button"
   },
   "settings": {
     "title": "Settings",
