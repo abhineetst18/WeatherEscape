@@ -4,7 +4,7 @@
   import { initI18n } from './lib/stores/i18nStore.svelte.js';
   import { weather, fetchBaseWeather, fetchDestinationWeather, toggleDay, setTimePeriod } from './lib/stores/weatherStore.svelte.js';
   import { clearExpiredCache, clearWeatherCache } from './lib/services/cacheService.js';
-  import { discoverDestinations } from './lib/services/destinationService.js';
+  import { discoverDestinations, fallbackDestinationsFor } from './lib/services/destinationService.js';
   import { queueDriveTime, estimateDriveTime, cancelQueuedRequests } from './lib/services/routingService.js';
   import Header from './lib/components/Header.svelte';
   import Map from './lib/components/Map.svelte';
@@ -90,7 +90,13 @@
 
     // 2. Discover destinations
     const radiusKm = (settings.drivingRadiusMinutes / 60) * 70;
-    const destinations = await discoverDestinations(loc.lat, loc.lon, radiusKm);
+    let destinations = await discoverDestinations(loc.lat, loc.lon, radiusKm);
+    console.log('[loadWeatherData] radiusKm:', radiusKm, 'found:', destinations?.length);
+    if ((!destinations || destinations.length === 0)) {
+      console.warn('[loadWeatherData] discoverDestinations returned none, loading curated fallback');
+      destinations = fallbackDestinationsFor(loc.lat, loc.lon, radiusKm);
+      console.log('[loadWeatherData] fallback count:', destinations.length);
+    }
     if (loadId !== activeLoadId) return;
 
     // 3. Estimate drive times

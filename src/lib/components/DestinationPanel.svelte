@@ -215,9 +215,9 @@
   .panel-content { padding: 8px 12px 12px; overflow-y: auto; max-height: calc(45vh - 44px); position: relative; }
 
   /* Compact floating radius control for mobile: small circular buttons and tight label */
-  .mobile-radius-row { display: none; position: absolute; right: 12px; top: 8px; align-items: center; gap: 6px; background: rgba(0,0,0,0.04); padding: 4px 6px; border-radius: 20px; z-index: 50; }
-  .radius-btn { background: var(--surface2); border: none; border-radius: 50%; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; }
-  .radius-label { font-weight: 700; color: var(--text); font-size: 12px; min-width: 28px; text-align: center; }
+  .mobile-radius-row { display: none; position: absolute; right: 12px; top: -12px; align-items: center; gap: 8px; background: rgba(0,0,0,0.04); padding: 6px 8px; border-radius: 22px; z-index: 60; box-shadow: 0 6px 18px rgba(0,0,0,0.06); }
+  .radius-btn { background: var(--surface2); border: none; border-radius: 50%; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; }
+  .radius-label { font-weight: 700; color: var(--text); font-size: 12px; min-width: 30px; text-align: center; padding: 0 4px; }
 
   .panel-controls { display: flex; align-items: center; gap: 6px; padding-bottom: 10px; flex-wrap: wrap; }
   .day-toggle {
