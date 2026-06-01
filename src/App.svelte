@@ -162,6 +162,12 @@
     <main class="app-map">
       <Map bind:this={mapComponent} />
       <BottomSheet ariaLabel="Destinations">
+        {#snippet label()}
+          Destinations
+          {#if weather.destinations?.length > 0}
+            <span style="font-weight:400;font-size:11px;color:var(--text-dim);margin-left:4px;">({weather.destinations.filter(d => d.qualityScore != null).length})</span>
+          {/if}
+        {/snippet}
         <DestinationPanel onSelectDestination={handleSelectDestination} />
       </BottomSheet>
     </main>

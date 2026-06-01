@@ -5,12 +5,22 @@
 
   function toggle() { open = !open; }
 
-  onMount(() => {});
+  onMount(() => {
+    try {
+      if (typeof window !== 'undefined' && window.matchMedia) {
+        const mq = window.matchMedia('(max-width: 767px)');
+        if (mq.matches) open = true;
+      }
+    } catch (e) {
+      // ignore
+    }
+  });
 </script>
 
 <div class="bsheet" class:open={open} role="region" aria-label={ariaLabel}>
   <button class="bsheet-handle" onclick={toggle} aria-expanded={open} aria-label={ariaLabel}>
     <span class="handle-bar"></span>
+    <span class="bsheet-label"><slot name="label" /></span>
     <span class="bsheet-toggle">{open ? '▼' : '▲'}</span>
   </button>
 
@@ -50,6 +60,7 @@
       backdrop-filter: blur(6px);
     }
     .handle-bar { width: 36px; height: 4px; background: var(--text-dim); border-radius: 4px; display:inline-block; }
+    .bsheet-label { flex: 1; text-align: left; font-size: 13px; font-weight: 600; color: var(--text); margin-left: 8px; }
     .bsheet-toggle { margin-left: 8px; font-size: 12px; color: var(--text-dim); }
 
     .bsheet-content {

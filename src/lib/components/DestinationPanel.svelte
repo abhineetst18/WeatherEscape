@@ -244,8 +244,10 @@
     .panel.collapsed .toggle-icon { display: none; }
   }
 
-  /* Mobile: tighter controls bar */
+  /* Mobile: tighter controls bar; hide the panel's own toggle (BottomSheet handle covers it) */
   @media (max-width: 767px) {
+    .panel-toggle { display: none; }
+    .panel-content { display: block !important; max-height: none; padding: 4px 0 12px; }
     .panel-controls { gap: 6px; padding-bottom: 8px; }
     .control-select { padding: 3px 6px; font-size: 11px; }
   }
