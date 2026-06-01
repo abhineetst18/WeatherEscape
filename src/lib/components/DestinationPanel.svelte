@@ -50,6 +50,8 @@
     const current = Number(settings.drivingRadiusMinutes) || 60;
     const next = Math.max(min, Math.min(max, current + delta * step));
     updateSetting('drivingRadiusMinutes', next);
+    // Trigger an immediate refresh so mobile users see updated destinations
+    try { window.dispatchEvent(new Event('refreshweather')); } catch {};
   }
 
   const filteredDestinations = $derived.by(() => {
@@ -98,9 +100,9 @@
   {#if expanded}
     <div class="panel-content">
       <!-- Mobile radius row: visible on small screens with +/- buttons -->
-      <div class="mobile-radius-row">
+      <div class="mobile-radius-row" role="group" aria-label="Search radius">
         <button class="radius-btn" onclick={() => adjustRadius(-1)} aria-label="Decrease radius">−</button>
-        <div class="radius-label">{settings.drivingRadiusMinutes} min</div>
+        <div class="radius-label">{settings.drivingRadiusMinutes}</div>
         <button class="radius-btn" onclick={() => adjustRadius(1)} aria-label="Increase radius">+</button>
       </div>
       <!-- Controls bar -->
@@ -210,11 +212,12 @@
   .last-updated { font-weight: 400; color: var(--text-dim); font-size: 10px; }
   .toggle-icon { font-size: 10px; color: var(--text-dim); }
 
-  .panel-content { padding: 8px 12px 12px; overflow-y: auto; max-height: calc(45vh - 44px); }
+  .panel-content { padding: 8px 12px 12px; overflow-y: auto; max-height: calc(45vh - 44px); position: relative; }
 
-  .mobile-radius-row { display: none; align-items: center; justify-content: center; gap: 8px; padding: 8px 0; }
-  .radius-btn { background: var(--surface2); border: none; border-radius: 8px; padding: 6px 10px; font-size: 16px; cursor: pointer; }
-  .radius-label { font-weight: 700; color: var(--text); }
+  /* Compact floating radius control for mobile: small circular buttons and tight label */
+  .mobile-radius-row { display: none; position: absolute; right: 12px; top: 8px; align-items: center; gap: 6px; background: rgba(0,0,0,0.04); padding: 4px 6px; border-radius: 20px; z-index: 50; }
+  .radius-btn { background: var(--surface2); border: none; border-radius: 50%; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; }
+  .radius-label { font-weight: 700; color: var(--text); font-size: 12px; min-width: 28px; text-align: center; }
 
   .panel-controls { display: flex; align-items: center; gap: 6px; padding-bottom: 10px; flex-wrap: wrap; }
   .day-toggle {
@@ -277,5 +280,8 @@
   /* Mobile-specific: show radius control at top */
   @media (max-width: 767px) {
     .mobile-radius-row { display: flex; }
+    /* make controls bar slightly tighter on phones */
+    .panel-controls { gap: 6px; padding-bottom: 8px; }
+    .control-select { padding: 3px 6px; font-size: 11px; }
   }
 </style>
