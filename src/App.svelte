@@ -9,6 +9,7 @@
   import Header from './lib/components/Header.svelte';
   import Map from './lib/components/Map.svelte';
   import DestinationPanel from './lib/components/DestinationPanel.svelte';
+  import BottomSheet from './lib/components/BottomSheet.svelte';
   import SettingsModal from './lib/components/SettingsModal.svelte';
 
   let mounted = $state(false);
@@ -149,7 +150,9 @@
     <Header />
     <main class="app-map">
       <Map bind:this={mapComponent} />
-      <DestinationPanel onSelectDestination={handleSelectDestination} />
+      <BottomSheet ariaLabel="Destinations">
+        <DestinationPanel onSelectDestination={handleSelectDestination} />
+      </BottomSheet>
     </main>
     {#if showSettings}
       <SettingsModal onclose={() => showSettings = false} />
