@@ -1,0 +1,133 @@
+@import 'leaflet/dist/leaflet.css';
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════
+   Design Tokens — Web Design Language
+   See: .github/instructions/webDesignLanguage.instructions.md
+   ═══════════════════════════════════════════ */
+
+:root {
+  /* ─── Spacing (4pt/8pt grid) ─── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-8: 48px;
+
+  /* ─── Colors: Surface ─── */
+  --bg: #1a1a2e;
+  --surface: #16213e;
+  --surface2: #0f3460;
+  --surface-hover: rgba(255, 255, 255, 0.04);
+  --surface-pressed: rgba(255, 255, 255, 0.08);
+
+  /* ─── Colors: Text ─── */
+  --text: #f0f0f0;
+  --text-dim: #a0a0b0;
+  --text-disabled: rgba(255, 255, 255, 0.3);
+
+  /* ─── Colors: Interactive ─── */
+  --accent: #e94560;
+  --accent-hover: #d13a52;
+  --accent-subtle: rgba(233, 69, 96, 0.12);
+  --positive: #00b894;
+  --negative: #e17055;
+  --destructive: #d63031;
+
+  /* ─── Colors: Structural ─── */
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.15);
+  --scrim: rgba(0, 0, 0, 0.6);
+  --focus-ring: var(--accent);
+
+  /* ─── Typography ─── */
+  --text-xs: 10px;
+  --text-sm: 11px;
+  --text-base: 13px;
+  --text-md: 15px;
+  --text-lg: 18px;
+  --text-xl: 24px;
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+
+  /* ─── Animation ─── */
+  --duration-quick: 100ms;
+  --duration-standard: 200ms;
+  --duration-emphasis: 300ms;
+  --duration-exit: 150ms;
+  --ease-enter: cubic-bezier(0, 0, 0.2, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --ease-move: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ─── Elevation ─── */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.15);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.3);
+
+  /* ─── Radius ─── */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+}
+
+[data-theme="light"] {
+  --bg: #f0f2f5;
+  --surface: #ffffff;
+  --surface2: #e4e6eb;
+  --surface-hover: rgba(0, 0, 0, 0.03);
+  --surface-pressed: rgba(0, 0, 0, 0.06);
+  --text: #1c1e21;
+  --text-dim: #65676b;
+  --text-disabled: rgba(0, 0, 0, 0.25);
+  --border: rgba(0, 0, 0, 0.1);
+  --border-strong: rgba(0, 0, 0, 0.2);
+  --scrim: rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.16);
+}
+
+/* ─── Base Styles ─── */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100dvh;
+}
+
+/* ─── Reduced Motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ─── Skeleton Loading ─── */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 0.3; }
+}
+
+.skeleton {
+  background: var(--surface2);
+  border-radius: var(--radius-sm);
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+/* ─── Leaflet Popup Theme ─── */
+[data-theme="light"] .leaflet-popup-content-wrapper {
+  background: #fff !important;
+  color: #1c1e21 !important;
+}
+[data-theme="light"] .leaflet-popup-tip {
+  background: #fff !important;
+}

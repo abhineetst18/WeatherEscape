@@ -1,0 +1,108 @@
+{
+  "app": {
+    "name": "WeatherEscape",
+    "tagline": "Find bedre vejr i nærheden"
+  },
+  "header": {
+    "title": "WeatherEscape",
+    "settings": "Indstillinger",
+    "language": "Sprog"
+  },
+  "location": {
+    "current": "Nuværende position",
+    "saved": "Gemte steder",
+    "add": "Tilføj sted",
+    "search": "Søg efter sted...",
+    "default": "Göteborg",
+    "useGps": "Brug GPS",
+    "gpsError": "Kunne ikke finde din position"
+  },
+  "radius": {
+    "label": "Køreradius",
+    "minutes": "{value} min",
+    "hours": "{value} t"
+  },
+  "weather": {
+    "temperature": "Temperatur",
+    "precipitation": "Nedbør",
+    "cloudCover": "Skydække",
+    "windSpeed": "Vind",
+    "uvIndex": "UV-indeks",
+    "confidence": "Pålidelighed",
+    "feelsLike": "Føles som",
+    "humidity": "Luftfugtighed"
+  },
+  "delta": {
+    "warmer": "+{value}°",
+    "cooler": "{value}°",
+    "lessRain": "-{value}mm",
+    "moreRain": "+{value}mm",
+    "clearer": "-{value}%",
+    "cloudier": "+{value}%"
+  },
+  "quality": {
+    "great": "Fremragende",
+    "moderate": "Moderat",
+    "marginal": "Marginal",
+    "worse": "Dårligere"
+  },
+  "destinations": {
+    "title": "Destinationer",
+    "empty": "Ingen destinationer fundet. Juster radius eller position.",
+    "loading": "Søger efter steder med bedre vejr...",
+    "sortBy": "Sortér",
+    "filterBy": "Filtrér",
+    "driveTime": "Køretid",
+    "weatherQuality": "Vejrkvalitet",
+    "tempImprovement": "Temperaturforbedring",
+    "all": "Alle",
+    "town": "By",
+    "beach": "Strand",
+    "hiking": "Vandring",
+    "attraction": "Attraktion",
+    "custom": "Brugerdefineret"
+  },
+  "settings": {
+    "title": "Indstillinger",
+    "theme": "Tema",
+    "dark": "Mørkt",
+    "light": "Lyst",
+    "language": "Sprog",
+    "apiKey": "OpenRouteService API-nøgle",
+    "apiKeyPlaceholder": "Indtast din ORS API-nøgle",
+    "apiKeyHelp": "Få en gratis nøgle på openrouteservice.org",
+    "weights": "Vejrvægte",
+    "savedLocations": "Gemte steder",
+    "close": "Luk",
+    "save": "Gem"
+  },
+  "map": {
+    "zoomIn": "Zoom ind",
+    "zoomOut": "Zoom ud",
+    "locate": "Min position"
+  },
+  "time": {
+    "today": "I dag",
+    "tomorrow": "I morgen",
+    "allDay": "Hele dagen",
+    "morning": "Formiddag",
+    "afternoon": "Eftermiddag",
+    "evening": "Aften",
+    "periodLabel": "Tidspunkt",
+    "noDataForPeriod": "Ingen prognose for denne tidsperiode. Prøv Hele dagen eller en fremtidig periode.",
+    "minutes": "min",
+    "hours": "t"
+  },
+  "errors": {
+    "networkError": "Netværksfejl. Tjek din forbindelse.",
+    "apiLimitReached": "API-grænse nået. Prøv igen senere.",
+    "noWeatherData": "Kunne ikke hente vejrdata."
+  },
+  "attribution": {
+    "smhi": "Kilde: SMHI Åbne Data",
+    "yr": "Data fra MET Norway",
+    "osm": "© OpenStreetMap-bidragydere",
+    "ors": "Drevet af OpenRouteService",
+    "carto": "© CARTO"
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "app": {
+    "name": "WeatherEscape",
+    "tagline": "Hitta bättre väder i närheten"
+  },
+  "header": {
+    "title": "WeatherEscape",
+    "settings": "Inställningar",
+    "language": "Språk"
+  },
+  "location": {
+    "current": "Nuvarande plats",
+    "saved": "Sparade platser",
+    "add": "Lägg till plats",
+    "search": "Sök plats...",
+    "default": "Göteborg",
+    "useGps": "Använd GPS",
+    "gpsError": "Kunde inte hämta din position"
+  },
+  "radius": {
+    "label": "Körradie",
+    "minutes": "{value} min",
+    "hours": "{value} tim"
+  },
+  "weather": {
+    "temperature": "Temperatur",
+    "precipitation": "Nederbörd",
+    "cloudCover": "Molnighet",
+    "windSpeed": "Vind",
+    "uvIndex": "UV-index",
+    "confidence": "Tillförlitlighet",
+    "feelsLike": "Känns som",
+    "humidity": "Luftfuktighet"
+  },
+  "delta": {
+    "warmer": "+{value}°",
+    "cooler": "{value}°",
+    "lessRain": "-{value}mm",
+    "moreRain": "+{value}mm",
+    "clearer": "-{value}%",
+    "cloudier": "+{value}%"
+  },
+  "quality": {
+    "great": "Utmärkt",
+    "moderate": "Måttlig",
+    "marginal": "Marginell",
+    "worse": "Sämre"
+  },
+  "destinations": {
+    "title": "Destinationer",
+    "empty": "Inga destinationer hittades. Justera radie eller plats.",
+    "loading": "Söker platser med bättre väder...",
+    "sortBy": "Sortera",
+    "filterBy": "Filtrera",
+    "driveTime": "Körtid",
+    "weatherQuality": "Väderkvalitet",
+    "tempImprovement": "Temperaturförbättring",
+    "all": "Alla",
+    "town": "Stad",
+    "beach": "Strand",
+    "hiking": "Vandring",
+    "attraction": "Attraktion",
+    "custom": "Egen"
+  },
+  "settings": {
+    "title": "Inställningar",
+    "theme": "Tema",
+    "dark": "Mörkt",
+    "light": "Ljust",
+    "language": "Språk",
+    "apiKey": "OpenRouteService API-nyckel",
+    "apiKeyPlaceholder": "Ange din ORS API-nyckel",
+    "apiKeyHelp": "Skaffa en gratis nyckel på openrouteservice.org",
+    "weights": "Vädervikter",
+    "savedLocations": "Sparade platser",
+    "close": "Stäng",
+    "save": "Spara"
+  },
+  "map": {
+    "zoomIn": "Zooma in",
+    "zoomOut": "Zooma ut",
+    "locate": "Min plats"
+  },
+  "time": {
+    "today": "Idag",
+    "tomorrow": "Imorgon",
+    "allDay": "Hela dagen",
+    "morning": "Förmiddag",
+    "afternoon": "Eftermiddag",
+    "evening": "Kväll",
+    "periodLabel": "Tid på dagen",
+    "noDataForPeriod": "Ingen prognos för denna tidsperiod. Prova Hela dagen eller en framtida period.",
+    "minutes": "min",
+    "hours": "tim"
+  },
+  "errors": {
+    "networkError": "Nätverksfel. Kontrollera din anslutning.",
+    "apiLimitReached": "API-gräns nådd. Försök igen senare.",
+    "noWeatherData": "Kunde inte hämta väderdata."
+  },
+  "attribution": {
+    "smhi": "Källa: SMHI Öppna Data",
+    "yr": "Data från MET Norway",
+    "osm": "© OpenStreetMap-bidragsgivare",
+    "ors": "Drivs av OpenRouteService",
+    "carto": "© CARTO"
+  }
+}

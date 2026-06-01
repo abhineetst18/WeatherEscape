@@ -1,0 +1,108 @@
+{
+  "app": {
+    "name": "WeatherEscape",
+    "tagline": "Find better weather nearby"
+  },
+  "header": {
+    "title": "WeatherEscape",
+    "settings": "Settings",
+    "language": "Language"
+  },
+  "location": {
+    "current": "Current Location",
+    "saved": "Saved Locations",
+    "add": "Add Location",
+    "search": "Search location...",
+    "default": "Gothenburg",
+    "useGps": "Use GPS",
+    "gpsError": "Unable to get your location"
+  },
+  "radius": {
+    "label": "Driving radius",
+    "minutes": "{value} min",
+    "hours": "{value} hr"
+  },
+  "weather": {
+    "temperature": "Temperature",
+    "precipitation": "Precipitation",
+    "cloudCover": "Cloud cover",
+    "windSpeed": "Wind",
+    "uvIndex": "UV Index",
+    "confidence": "Confidence",
+    "feelsLike": "Feels like",
+    "humidity": "Humidity"
+  },
+  "delta": {
+    "warmer": "+{value}°",
+    "cooler": "{value}°",
+    "lessRain": "-{value}mm",
+    "moreRain": "+{value}mm",
+    "clearer": "-{value}%",
+    "cloudier": "+{value}%"
+  },
+  "quality": {
+    "great": "Great",
+    "moderate": "Moderate",
+    "marginal": "Marginal",
+    "worse": "Worse"
+  },
+  "destinations": {
+    "title": "Destinations",
+    "empty": "No destinations found. Adjust your radius or location.",
+    "loading": "Finding destinations with better weather...",
+    "sortBy": "Sort by",
+    "filterBy": "Filter by",
+    "driveTime": "Drive time",
+    "weatherQuality": "Weather quality",
+    "tempImprovement": "Temperature improvement",
+    "all": "All",
+    "town": "Town",
+    "beach": "Beach",
+    "hiking": "Hiking",
+    "attraction": "Attraction",
+    "custom": "Custom"
+  },
+  "settings": {
+    "title": "Settings",
+    "theme": "Theme",
+    "dark": "Dark",
+    "light": "Light",
+    "language": "Language",
+    "apiKey": "OpenRouteService API Key",
+    "apiKeyPlaceholder": "Enter your ORS API key",
+    "apiKeyHelp": "Get a free key at openrouteservice.org",
+    "weights": "Weather scoring weights",
+    "savedLocations": "Saved locations",
+    "close": "Close",
+    "save": "Save"
+  },
+  "map": {
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "locate": "My location"
+  },
+  "time": {
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "allDay": "All Day",
+    "morning": "Morning",
+    "afternoon": "Afternoon",
+    "evening": "Evening",
+    "periodLabel": "Time of day",
+    "noDataForPeriod": "No forecast data for this time period. Try All Day or a future period.",
+    "minutes": "min",
+    "hours": "hr"
+  },
+  "errors": {
+    "networkError": "Network error. Please check your connection.",
+    "apiLimitReached": "API rate limit reached. Try again later.",
+    "noWeatherData": "Unable to fetch weather data."
+  },
+  "attribution": {
+    "smhi": "Source: SMHI Open Data",
+    "yr": "Data from MET Norway",
+    "osm": "© OpenStreetMap contributors",
+    "ors": "Powered by OpenRouteService",
+    "carto": "© CARTO"
+  }
+}
