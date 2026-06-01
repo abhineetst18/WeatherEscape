@@ -11,19 +11,12 @@ import { haversineDistance } from './routingService.js';
 const FALLBACK_MIN_KM = 20;
 
 const FALLBACK_TOWNS = [
-  // --- Beaches (20km+, coastal first) ---
-  // Southern archipelago
+  // --- Gothenburg area: beaches ---
   { name: 'Styrsö', lat: 57.6167, lon: 11.7833, type: 'beach', population: 1500 },
   { name: 'Vrångö', lat: 57.5667, lon: 11.7667, type: 'beach', population: 500 },
-  { name: 'Donsö', lat: 57.5833, lon: 11.7833, type: 'beach', population: 1000 },
-  // Northern archipelago
   { name: 'Öckerö', lat: 57.7167, lon: 11.6500, type: 'beach', population: 4500 },
-  { name: 'Hönö', lat: 57.6833, lon: 11.6167, type: 'beach', population: 3500 },
-  { name: 'Klädesholmen', lat: 57.8833, lon: 11.5167, type: 'beach', population: 600 },
   { name: 'Tjörn', lat: 57.9833, lon: 11.5667, type: 'beach', population: 15000 },
   { name: 'Marstrand', lat: 57.8869, lon: 11.5922, type: 'beach', population: 1400 },
-  { name: 'Åsa', lat: 57.3500, lon: 12.1200, type: 'beach', population: 2000 },
-  { name: 'Tjolöholm', lat: 57.3800, lon: 12.1600, type: 'beach', population: 1000 },
   { name: 'Varberg', lat: 57.1057, lon: 12.2508, type: 'beach', population: 35000 },
   { name: 'Falkenberg', lat: 56.9054, lon: 12.4914, type: 'beach', population: 20000 },
   { name: 'Halmstad', lat: 56.6745, lon: 12.8578, type: 'beach', population: 70000 },
@@ -32,29 +25,68 @@ const FALLBACK_TOWNS = [
   { name: 'Strömstad', lat: 58.9395, lon: 11.1712, type: 'beach', population: 6500 },
   { name: 'Grebbestad', lat: 58.6955, lon: 11.2536, type: 'beach', population: 1600 },
   { name: 'Fjällbacka', lat: 58.5995, lon: 11.2850, type: 'beach', population: 860 },
-  { name: 'Laholm', lat: 56.5112, lon: 13.0432, type: 'beach', population: 6500 },
-  // --- Hiking / Nature (20km+) ---
-  { name: 'Orust', lat: 58.1833, lon: 11.6667, type: 'hiking', population: 15000 },
-  { name: 'Orust Island', lat: 58.1500, lon: 11.7300, type: 'hiking', population: 15000 },
+  // --- Stockholm area: beaches & nature ---
+  { name: 'Sandhamn', lat: 59.2833, lon: 18.9167, type: 'beach', population: 100 },
+  { name: 'Grinda', lat: 59.3833, lon: 18.7333, type: 'beach', population: 50 },
+  { name: 'Möja', lat: 59.4167, lon: 18.8667, type: 'beach', population: 400 },
+  { name: 'Vaxholm', lat: 59.4024, lon: 18.3297, type: 'town', population: 5200 },
+  { name: 'Sigtuna', lat: 59.6173, lon: 17.7248, type: 'attraction', population: 9000 },
+  { name: 'Mariefred', lat: 59.2524, lon: 17.2228, type: 'attraction', population: 4000 },
+  { name: 'Trosa', lat: 58.8981, lon: 17.5489, type: 'beach', population: 4000 },
+  { name: 'Norrtälje', lat: 59.7578, lon: 18.7047, type: 'town', population: 17000 },
+  { name: 'Nynäshamn', lat: 58.9035, lon: 17.9477, type: 'beach', population: 13000 },
+  { name: 'Tyresta', lat: 59.1833, lon: 18.2667, type: 'hiking', population: 200 },
+  // --- Malmö/Skåne area ---
+  { name: 'Falsterbo', lat: 55.3833, lon: 12.8333, type: 'beach', population: 2000 },
+  { name: 'Ystad', lat: 55.4292, lon: 13.8200, type: 'town', population: 18000 },
+  { name: 'Helsingborg', lat: 56.0465, lon: 12.6945, type: 'town', population: 110000 },
+  { name: 'Kristianstad', lat: 56.0294, lon: 14.1567, type: 'town', population: 38000 },
+  { name: 'Åhus', lat: 55.9281, lon: 14.3044, type: 'beach', population: 10000 },
+  { name: 'Simrishamn', lat: 55.5564, lon: 14.3621, type: 'beach', population: 7000 },
+  { name: 'Kullaberg', lat: 56.2800, lon: 12.4500, type: 'hiking', population: 300 },
+  { name: 'Österlen', lat: 55.6500, lon: 14.1000, type: 'hiking', population: 1000 },
+  // --- Oslo area (Norway) ---
+  { name: 'Drøbak', lat: 59.6633, lon: 10.6178, type: 'town', population: 14000 },
+  { name: 'Fredrikstad', lat: 59.2181, lon: 10.9298, type: 'town', population: 82000 },
+  { name: 'Moss', lat: 59.4352, lon: 10.6582, type: 'town', population: 32000 },
+  { name: 'Hønefoss', lat: 60.1706, lon: 10.2515, type: 'town', population: 15000 },
+  { name: 'Kongsberg', lat: 59.6700, lon: 9.6500, type: 'attraction', population: 26000 },
+  { name: 'Hvaler', lat: 59.0667, lon: 11.0000, type: 'beach', population: 4000 },
+  { name: 'Halden', lat: 59.1228, lon: 11.3878, type: 'town', population: 31000 },
+  { name: 'Lillehammer', lat: 61.1153, lon: 10.4662, type: 'hiking', population: 27000 },
+  // --- Copenhagen area (Denmark) ---
+  { name: 'Helsingør', lat: 56.0361, lon: 12.6136, type: 'attraction', population: 47000 },
+  { name: 'Roskilde', lat: 55.6415, lon: 12.0803, type: 'attraction', population: 51000 },
+  { name: 'Køge', lat: 55.4579, lon: 12.1820, type: 'beach', population: 36000 },
+  { name: 'Hillerød', lat: 55.9355, lon: 12.3090, type: 'attraction', population: 29000 },
+  { name: 'Tisvildeleje', lat: 56.0544, lon: 12.0736, type: 'beach', population: 1500 },
+  { name: 'Hornbæk', lat: 56.0858, lon: 12.4550, type: 'beach', population: 3000 },
+  // --- Major Swedish cities (broad coverage) ---
+  { name: 'Uppsala', lat: 59.8586, lon: 17.6389, type: 'town', population: 170000 },
+  { name: 'Västerås', lat: 59.6099, lon: 16.5448, type: 'town', population: 119000 },
+  { name: 'Örebro', lat: 59.2753, lon: 15.2134, type: 'town', population: 115000 },
+  { name: 'Linköping', lat: 58.4108, lon: 15.6214, type: 'town', population: 105000 },
+  { name: 'Norrköping', lat: 58.5877, lon: 16.1924, type: 'town', population: 94000 },
+  { name: 'Jönköping', lat: 57.7826, lon: 14.1618, type: 'town', population: 93000 },
+  { name: 'Borås', lat: 57.7210, lon: 12.9401, type: 'town', population: 72000 },
+  { name: 'Lund', lat: 55.7047, lon: 13.1910, type: 'town', population: 93000 },
+  { name: 'Umeå', lat: 63.8258, lon: 20.2630, type: 'town', population: 89000 },
+  { name: 'Gävle', lat: 60.6749, lon: 17.1413, type: 'town', population: 77000 },
+  { name: 'Sundsvall', lat: 62.3908, lon: 17.3069, type: 'town', population: 50000 },
+  { name: 'Östersund', lat: 63.1792, lon: 14.6357, type: 'town', population: 45000 },
+  // --- Gothenburg area: hiking/towns ---
   { name: 'Kinnekulle', lat: 58.5800, lon: 13.3900, type: 'hiking', population: 500 },
   { name: 'Tiveden', lat: 58.8500, lon: 14.5000, type: 'hiking', population: 200 },
-  // --- Attractions (20km+) ---
-  { name: 'Tjolöholms Slott', lat: 57.3825, lon: 12.1675, type: 'attraction', population: 500 },
   { name: 'Ullared', lat: 57.1305, lon: 12.7152, type: 'attraction', population: 800 },
   { name: 'Nordens Ark', lat: 58.2583, lon: 11.3833, type: 'attraction', population: 500 },
   { name: 'Läckö Slott', lat: 58.6745, lon: 13.1984, type: 'attraction', population: 300 },
-  // --- Towns (20km+) ---
   { name: 'Stenungsund', lat: 58.0694, lon: 11.8180, type: 'town', population: 11000 },
   { name: 'Alingsås', lat: 57.9304, lon: 12.5332, type: 'town', population: 28000 },
-  { name: 'Borås', lat: 57.7210, lon: 12.9401, type: 'town', population: 72000 },
   { name: 'Trollhättan', lat: 58.2837, lon: 12.2886, type: 'town', population: 50000 },
   { name: 'Uddevalla', lat: 58.3498, lon: 11.9381, type: 'town', population: 36000 },
-  { name: 'Vänersborg', lat: 58.3805, lon: 12.3234, type: 'town', population: 25000 },
   { name: 'Skövde', lat: 58.3914, lon: 13.8459, type: 'town', population: 40000 },
   { name: 'Lidköping', lat: 58.5053, lon: 13.1574, type: 'town', population: 26000 },
   { name: 'Mariestad', lat: 58.7101, lon: 13.8233, type: 'town', population: 15000 },
-  { name: 'Skara', lat: 58.3867, lon: 13.4388, type: 'town', population: 11000 },
-  { name: 'Jönköping', lat: 57.7826, lon: 14.1618, type: 'town', population: 93000 },
 ];
 
 /**
@@ -121,7 +153,7 @@ async function queryOverpass(lat, lon, radiusKm) {
   // WHY: Separate queries per type so we get a balanced set of results rather
   // than having towns (high population) consume all available slots.
   const query = `
-    [out:json][timeout:30];
+    [out:json][timeout:20];
     (
       node["place"~"city|town"](${bbox});
       nwr["natural"="beach"](${bbox});
@@ -137,23 +169,38 @@ async function queryOverpass(lat, lon, radiusKm) {
     body: `data=${encodeURIComponent(query)}`,
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
   };
-  const res = await fetch(API_URLS.overpass, fetchOptions);
-  const text = await res.text();
-  let data;
-  if (text.startsWith('<') || !res.ok) {
-    // WHY: overpass-api.de returns HTML error body when overloaded — fallback to kumi.systems
-    console.warn('[destinations] primary Overpass returned HTML, trying kumi.systems');
-    const res2 = await fetch('https://overpass.kumi.systems/api/interpreter', fetchOptions);
-    const text2 = await res2.text();
-    if (text2.startsWith('<') || !res2.ok) {
-      throw new Error('Both Overpass endpoints returned HTML/error');
-    }
-    data = JSON.parse(text2);
-  } else {
-    data = JSON.parse(text);
-  }
 
-  const elements = Array.isArray(data.elements) ? data.elements : [];
+  // WHY: AbortController gives a hard 15s cap so a stalled Overpass request
+  // doesn't block the UI indefinitely — fallback kicks in instead.
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  try {
+    const res = await fetch(API_URLS.overpass, { ...fetchOptions, signal: controller.signal });
+    clearTimeout(timeoutId);
+    const text = await res.text();
+    let data;
+    if (text.startsWith('<') || !res.ok) {
+      // WHY: overpass-api.de returns HTML error body when overloaded — fallback to kumi.systems
+      console.warn('[destinations] primary Overpass returned HTML, trying kumi.systems');
+      const controller2 = new AbortController();
+      const timeoutId2 = setTimeout(() => controller2.abort(), 15000);
+      try {
+        const res2 = await fetch('https://overpass.kumi.systems/api/interpreter', { ...fetchOptions, signal: controller2.signal });
+        clearTimeout(timeoutId2);
+        const text2 = await res2.text();
+        if (text2.startsWith('<') || !res2.ok) {
+          throw new Error('Both Overpass endpoints returned HTML/error');
+        }
+        data = JSON.parse(text2);
+      } catch (e2) {
+        clearTimeout(timeoutId2);
+        throw e2;
+      }
+    } else {
+      data = JSON.parse(text);
+    }
+
+    const elements = Array.isArray(data.elements) ? data.elements : [];
   const seen = new Set(); // WHY: deduplicate by name — same place often appears as node + way
 
   const mapped = elements
@@ -191,6 +238,10 @@ async function queryOverpass(lat, lon, radiusKm) {
   const nonTowns = mapped.filter(d => d.type !== 'town').sort((a, b) => b.population - a.population);
   const towns = mapped.filter(d => d.type === 'town').sort((a, b) => b.population - a.population);
   return [...nonTowns, ...towns];
+  } catch (e) {
+    clearTimeout(timeoutId);
+    throw e;
+  }
 }
 
 /**
