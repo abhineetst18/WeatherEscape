@@ -20,7 +20,10 @@ async function loadLocale(locale) {
     return localeCache[locale];
   }
   try {
-    const response = await fetch(`/locales/${locale}.json`);
+    const base = typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.BASE_URL
+      ? import.meta.env.BASE_URL
+      : '/';
+    const response = await fetch(`${base}locales/${locale}.json`);
     if (!response.ok) throw new Error(`Failed to load locale: ${locale}`);
     const translations = await response.json();
     localeCache[locale] = translations;
