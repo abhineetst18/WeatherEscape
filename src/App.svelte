@@ -107,8 +107,13 @@
       dest.isEstimate = est.isEstimate;
     }
 
-    // 4. Filter by actual drive time — allow 20% tolerance since haversine is an underestimate
-    const withinRadius = destinations.filter(d => d.driveTimeMinutes <= settings.drivingRadiusMinutes * 1.2);
+    // 4. Filter by drive time — allow 20% tolerance. If filter removes everything
+    // (can happen on mobile with different GPS location or tight radius), use all.
+    let withinRadius = destinations.filter(d => d.driveTimeMinutes <= settings.drivingRadiusMinutes * 1.2);
+    if (withinRadius.length === 0 && destinations.length > 0) {
+      console.warn('[loadWeatherData] radius filter removed all destinations, using unfiltered list');
+      withinRadius = destinations;
+    }
 
     // 5. Fetch weather for all destinations
     await fetchDestinationWeather(withinRadius, loadId, () => activeLoadId);

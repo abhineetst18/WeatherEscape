@@ -148,7 +148,7 @@
         lbl.style.cursor = 'default';
         lbl.style.pointerEvents = 'none';
         lbl.title = 'Driving radius (minutes)';
-        lbl.innerHTML = `${settings.drivingRadiusMinutes}<span style="font-size:9px;display:block;line-height:1;">min</span>`;
+        lbl.innerHTML = `${settings.drivingRadiusMinutes}<br><span style="font-size:9px;line-height:1;">min</span>`;
         radiusLabel = lbl;
 
         const btnMinus = L.DomUtil.create('a', '', wrap);
@@ -174,7 +174,7 @@
     const next = Math.max(15, Math.min(300, Number(settings.drivingRadiusMinutes) + delta * step));
     updateSetting('drivingRadiusMinutes', next);
     if (radiusLabel) {
-      radiusLabel.innerHTML = `${next}<span style="font-size:9px;display:block;line-height:1;">min</span>`;
+      radiusLabel.innerHTML = `${next}<br><span style="font-size:9px;line-height:1;">min</span>`;
     }
     try { window.dispatchEvent(new Event('refreshweather')); } catch {}
   }
@@ -183,7 +183,7 @@
   $effect(() => {
     const r = settings.drivingRadiusMinutes;
     if (radiusLabel) {
-      radiusLabel.innerHTML = `${r}<span style="font-size:9px;display:block;line-height:1;">min</span>`;
+      radiusLabel.innerHTML = `${r}<br><span style="font-size:9px;line-height:1;">min</span>`;
     }
   });
 
@@ -283,13 +283,17 @@
     height: 34px !important;
   }
   :global(.radius-control-mobile .radius-label-cell) {
-    font-size: 12px !important;
+    font-size: 13px !important;
     font-weight: 700 !important;
     height: auto !important;
-    min-height: 36px !important;
+    min-height: 44px !important;
     text-align: center !important;
-    line-height: 1.2 !important;
-    padding: 4px 0 !important;
+    line-height: 1.3 !important;
+    padding: 6px 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
   :global([data-theme="light"] .radius-control-mobile a) {
     border-color: rgba(0,0,0,0.2) !important;
