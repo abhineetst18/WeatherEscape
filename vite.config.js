@@ -31,6 +31,7 @@ export default defineConfig({
       workbox: {
         skipWaiting: true,
         clientsClaim: true,
+        cacheId: 'we-v2',
         globPatterns: ['**/*.{js,css,html,svg,json}'],
         runtimeCaching: [
           {

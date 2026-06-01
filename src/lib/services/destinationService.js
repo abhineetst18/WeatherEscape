@@ -99,7 +99,7 @@ const FALLBACK_TOWNS = [
  */
 export async function discoverDestinations(centerLat, centerLon, radiusKm) {
   // v8: don't cache empty results; fallback if Overpass returns 0 elements
-  const cacheKey = buildCacheKey('dest-v8', centerLat, centerLon, radiusKm);
+  const cacheKey = buildCacheKey('dest-v9', centerLat, centerLon, radiusKm);
   const cached = cacheGet(cacheKey);
   if (cached) {
     console.log(`[destinations] cache hit (${cached.length} results)`);
