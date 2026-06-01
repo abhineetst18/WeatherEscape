@@ -1,7 +1,7 @@
 <script>
   import { t } from '../stores/i18nStore.svelte.js';
   import { weather, toggleDay, setTimePeriod, fetchDestinationWeather } from '../stores/weatherStore.svelte.js';
-  import { settings, getActiveLocation } from '../stores/settingsStore.svelte.js';
+  import { settings, getActiveLocation, updateSetting } from '../stores/settingsStore.svelte.js';
   import { fallbackDestinationsFor } from '../services/destinationService.js';
   import WeatherCard from './WeatherCard.svelte';
 
@@ -42,6 +42,15 @@
   }
 
   function togglePanel() { expanded = !expanded; }
+
+  function adjustRadius(delta) {
+    const step = 15;
+    const min = 15;
+    const max = 300;
+    const current = Number(settings.drivingRadiusMinutes) || 60;
+    const next = Math.max(min, Math.min(max, current + delta * step));
+    updateSetting('drivingRadiusMinutes', next);
+  }
 
   const filteredDestinations = $derived.by(() => {
     let list = [...destinations];
@@ -88,6 +97,12 @@
 
   {#if expanded}
     <div class="panel-content">
+      <!-- Mobile radius row: visible on small screens with +/- buttons -->
+      <div class="mobile-radius-row">
+        <button class="radius-btn" onclick={() => adjustRadius(-1)} aria-label="Decrease radius">−</button>
+        <div class="radius-label">{settings.drivingRadiusMinutes} min</div>
+        <button class="radius-btn" onclick={() => adjustRadius(1)} aria-label="Increase radius">+</button>
+      </div>
       <!-- Controls bar -->
       <div class="panel-controls">
         <!-- Day toggle -->
@@ -197,6 +212,10 @@
 
   .panel-content { padding: 8px 12px 12px; overflow-y: auto; max-height: calc(45vh - 44px); }
 
+  .mobile-radius-row { display: none; align-items: center; justify-content: center; gap: 8px; padding: 8px 0; }
+  .radius-btn { background: var(--surface2); border: none; border-radius: 8px; padding: 6px 10px; font-size: 16px; cursor: pointer; }
+  .radius-label { font-weight: 700; color: var(--text); }
+
   .panel-controls { display: flex; align-items: center; gap: 6px; padding-bottom: 10px; flex-wrap: wrap; }
   .day-toggle {
     background: var(--accent, #e94560);
@@ -253,5 +272,10 @@
     .panel.collapsed .toggle-handle { width: 4px; height: 28px; opacity: 0.5; margin-bottom: 0; }
     .panel.collapsed .panel-title,
     .panel.collapsed .toggle-icon { display: none; }
+  }
+
+  /* Mobile-specific: show radius control at top */
+  @media (max-width: 767px) {
+    .mobile-radius-row { display: flex; }
   }
 </style>
