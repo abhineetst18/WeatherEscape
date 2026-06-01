@@ -92,6 +92,24 @@
       <LocationPicker onclose={() => showLocationPicker = false} />
     </div>
   {/if}
+
+  <!-- Mobile-only base weather pill -->
+  {#if weather.base}
+    {@const dayDataMobile = weather.day === 'today' ? weather.base.today : weather.base.tomorrow}
+    {@const wm = dayDataMobile?.[weather.timePeriod] ?? dayDataMobile?.allDay}
+    {#if wm}
+      <div class="mobile-base-weather" aria-hidden="false">
+        <span class="emoji">{getWeatherEmoji(wm.conditionCode)}</span>
+        <span class="temp">{wm.temperature}°</span>
+        {#if wm.precipitation > 0}
+          <span class="detail">💧{wm.precipitation}mm</span>
+        {/if}
+        {#if wm.windSpeed != null}
+          <span class="detail">💨{wm.windSpeed}m/s</span>
+        {/if}
+      </div>
+    {/if}
+  {/if}
 </header>
 
 <style>
@@ -173,7 +191,12 @@
   @media (max-width: 600px) {
     .radius-inline { display: none; }
     .title { font-size: var(--text-base); }
+    .mobile-base-weather { display: flex; gap: 8px; align-items: center; margin-left: 8px; }
   }
+
+  .mobile-base-weather { display: none; position: relative; font-size: 14px; color: var(--text); background: var(--surface2); padding: 6px 10px; border-radius: 10px; margin: 8px; }
+  .mobile-base-weather .temp { font-weight: 700; }
+  .mobile-base-weather .detail { opacity: 0.9; margin-left: 6px; font-size: 13px; }
 
   .header-right {
     display: flex;
