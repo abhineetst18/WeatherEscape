@@ -245,3 +245,8 @@ function getFallbackDestinations(lat, lon, radiusKm) {
     }))
     .sort((a, b) => b.population - a.population);
 }
+
+// Expose a helper so UI can load fallback results directly when Overpass/network fails
+export function fallbackDestinationsFor(lat, lon, radiusKm) {
+  return getFallbackDestinations(lat, lon, radiusKm);
+}
