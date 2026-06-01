@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte';
-  import { settings } from '../stores/settingsStore.svelte.js';
+  import { settings, updateSetting } from '../stores/settingsStore.svelte.js';
   import { weather } from '../stores/weatherStore.svelte.js';
   import { MAP_DEFAULTS, MAP_ATTRIBUTION } from '../utils/constants.js';
   import { getTileUrl, getQualityColor, formatDriveTime } from '../utils/mapHelpers.js';
@@ -67,6 +67,8 @@
       try { map?.invalidateSize(); } catch (e) { /* Leaflet timing */ }
     });
     resizeObserver.observe(mapContainer);
+
+    buildRadiusControl();
   }
 
   // Theme tile switching
@@ -117,7 +119,74 @@
     }
   }
 
-  export function getMap() { return map; }
+  let radiusControl = null;
+  let radiusLabel = null;
+
+  function buildRadiusControl() {
+    if (!L || !map) return;
+    if (radiusControl) {
+      map.removeControl(radiusControl);
+    }
+    const RadiusControl = L.Control.extend({
+      options: { position: 'topright' },
+      onAdd() {
+        const wrap = L.DomUtil.create('div', 'leaflet-bar leaflet-control radius-control-mobile');
+        L.DomEvent.disableClickPropagation(wrap);
+
+        const btnPlus = L.DomUtil.create('a', '', wrap);
+        btnPlus.innerHTML = '+';
+        btnPlus.href = '#';
+        btnPlus.title = 'Increase driving radius';
+        btnPlus.setAttribute('role', 'button');
+        btnPlus.setAttribute('aria-label', 'Increase driving radius');
+        L.DomEvent.on(btnPlus, 'click', (e) => {
+          L.DomEvent.preventDefault(e);
+          adjustRadius(1);
+        });
+
+        const lbl = L.DomUtil.create('a', 'radius-label-cell', wrap);
+        lbl.style.cursor = 'default';
+        lbl.style.pointerEvents = 'none';
+        lbl.title = 'Driving radius (minutes)';
+        lbl.innerHTML = `${settings.drivingRadiusMinutes}<span style="font-size:9px;display:block;line-height:1;">min</span>`;
+        radiusLabel = lbl;
+
+        const btnMinus = L.DomUtil.create('a', '', wrap);
+        btnMinus.innerHTML = '&#8722;';
+        btnMinus.href = '#';
+        btnMinus.title = 'Decrease driving radius';
+        btnMinus.setAttribute('role', 'button');
+        btnMinus.setAttribute('aria-label', 'Decrease driving radius');
+        L.DomEvent.on(btnMinus, 'click', (e) => {
+          L.DomEvent.preventDefault(e);
+          adjustRadius(-1);
+        });
+
+        return wrap;
+      }
+    });
+    radiusControl = new RadiusControl();
+    radiusControl.addTo(map);
+  }
+
+  function adjustRadius(delta) {
+    const step = 15;
+    const next = Math.max(15, Math.min(300, Number(settings.drivingRadiusMinutes) + delta * step));
+    updateSetting('drivingRadiusMinutes', next);
+    if (radiusLabel) {
+      radiusLabel.innerHTML = `${next}<span style="font-size:9px;display:block;line-height:1;">min</span>`;
+    }
+    try { window.dispatchEvent(new Event('refreshweather')); } catch {}
+  }
+
+  // Keep label in sync if settings change externally
+  $effect(() => {
+    const r = settings.drivingRadiusMinutes;
+    if (radiusLabel) {
+      radiusLabel.innerHTML = `${r}<span style="font-size:9px;display:block;line-height:1;">min</span>`;
+    }
+  });
+
   export function getLeaflet() { return L; }
 
   let destinationMarkers = null;
@@ -195,7 +264,42 @@
     height: 100%;
   }
 
-  /* Fix Leaflet z-index in dark mode */
+  /* Radius control: matches Leaflet zoom button style, hidden on desktop */
+  :global(.radius-control-mobile) {
+    display: none;
+  }
+  :global(.radius-control-mobile a) {
+    background: var(--surface) !important;
+    color: var(--text) !important;
+    border-color: rgba(255,255,255,0.1) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    text-decoration: none !important;
+    width: 34px !important;
+    height: 34px !important;
+  }
+  :global(.radius-control-mobile .radius-label-cell) {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    height: auto !important;
+    min-height: 36px !important;
+    text-align: center !important;
+    line-height: 1.2 !important;
+    padding: 4px 0 !important;
+  }
+  :global([data-theme="light"] .radius-control-mobile a) {
+    border-color: rgba(0,0,0,0.2) !important;
+  }
+  /* Show only on mobile */
+  @media (max-width: 767px) {
+    :global(.radius-control-mobile) {
+      display: block;
+    }
+  }
   :global(.leaflet-control-zoom a) {
     background: var(--surface) !important;
     color: var(--text) !important;

@@ -1,7 +1,7 @@
 <script>
   import { t } from '../stores/i18nStore.svelte.js';
   import { weather, toggleDay, setTimePeriod, fetchDestinationWeather } from '../stores/weatherStore.svelte.js';
-  import { settings, updateSetting } from '../stores/settingsStore.svelte.js';
+  import { settings } from '../stores/settingsStore.svelte.js';
   import WeatherCard from './WeatherCard.svelte';
 
   let { onSelectDestination = () => {} } = $props();
@@ -41,17 +41,6 @@
   }
 
   function togglePanel() { expanded = !expanded; }
-
-  function adjustRadius(delta) {
-    const step = 15;
-    const min = 15;
-    const max = 300;
-    const current = Number(settings.drivingRadiusMinutes) || 60;
-    const next = Math.max(min, Math.min(max, current + delta * step));
-    updateSetting('drivingRadiusMinutes', next);
-    // Trigger an immediate refresh so mobile users see updated destinations
-    try { window.dispatchEvent(new Event('refreshweather')); } catch {};
-  }
 
   const filteredDestinations = $derived.by(() => {
     let list = [...destinations];
@@ -98,12 +87,6 @@
 
   {#if expanded}
     <div class="panel-content">
-      <!-- Mobile radius row: visible on small screens with +/- buttons -->
-      <div class="mobile-radius-row" role="group" aria-label="Search radius">
-        <button class="radius-btn" onclick={() => adjustRadius(-1)} aria-label="Decrease radius">−</button>
-        <div class="radius-label">{settings.drivingRadiusMinutes}</div>
-        <button class="radius-btn" onclick={() => adjustRadius(1)} aria-label="Increase radius">+</button>
-      </div>
       <!-- Controls bar -->
       <div class="panel-controls">
         <!-- Day toggle -->
@@ -200,12 +183,7 @@
   .last-updated { font-weight: 400; color: var(--text-dim); font-size: 10px; }
   .toggle-icon { font-size: 10px; color: var(--text-dim); }
 
-  .panel-content { padding: 8px 12px 12px; overflow-y: auto; max-height: calc(45vh - 44px); position: relative; }
-
-  /* Compact floating radius control for mobile: small circular buttons and tight label */
-  .mobile-radius-row { display: none; position: absolute; right: 12px; top: -12px; align-items: center; gap: 8px; background: rgba(0,0,0,0.04); padding: 6px 8px; border-radius: 22px; z-index: 60; box-shadow: 0 6px 18px rgba(0,0,0,0.06); }
-  .radius-btn { background: var(--surface2); border: none; border-radius: 50%; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; }
-  .radius-label { font-weight: 700; color: var(--text); font-size: 12px; min-width: 30px; text-align: center; padding: 0 4px; }
+  .panel-content { padding: 8px 12px 12px; overflow-y: auto; max-height: calc(45vh - 44px); }
 
   .panel-controls { display: flex; align-items: center; gap: 6px; padding-bottom: 10px; flex-wrap: wrap; }
   .day-toggle {
@@ -266,10 +244,8 @@
     .panel.collapsed .toggle-icon { display: none; }
   }
 
-  /* Mobile-specific: show radius control at top */
+  /* Mobile: tighter controls bar */
   @media (max-width: 767px) {
-    .mobile-radius-row { display: flex; }
-    /* make controls bar slightly tighter on phones */
     .panel-controls { gap: 6px; padding-bottom: 8px; }
     .control-select { padding: 3px 6px; font-size: 11px; }
   }
