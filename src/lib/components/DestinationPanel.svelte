@@ -247,7 +247,9 @@
   /* Mobile: tighter controls bar; hide the panel's own toggle (BottomSheet handle covers it) */
   @media (max-width: 767px) {
     .panel-toggle { display: none; }
-    .panel-content { display: block !important; max-height: none; padding: 4px 0 12px; }
+    /* Remove panel's own overflow clipping — BottomSheet content div is the scroller */
+    .panel { max-height: none !important; overflow: visible !important; }
+    .panel-content { display: block !important; max-height: none !important; overflow: visible !important; padding: 4px 0 12px; }
     .panel-controls { gap: 6px; padding-bottom: 8px; }
     .control-select { padding: 3px 6px; font-size: 11px; }
   }

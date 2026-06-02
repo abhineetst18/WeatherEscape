@@ -42,10 +42,12 @@
       z-index: 1400;
       height: 44px;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
       transition: height 280ms cubic-bezier(.2,.8,.2,1), box-shadow 200ms ease;
     }
     .bsheet.open {
-      height: 65vh;
+      height: 65dvh;
       box-shadow: 0 -10px 30px rgba(0,0,0,0.35);
     }
 
@@ -67,13 +69,14 @@
     .bsheet-toggle { margin-left: 8px; font-size: 12px; color: var(--text-dim); }
 
     .bsheet-content {
-      height: calc(65vh - 44px);
+      flex: 1;
+      min-height: 0;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       touch-action: pan-y;
       overscroll-behavior-y: contain;
       background: var(--surface);
-      padding: 8px 12px 20px;
+      padding: 8px 12px max(20px, env(safe-area-inset-bottom));
     }
   }
 

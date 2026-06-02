@@ -159,6 +159,9 @@
 <div class="app" data-theme={settings.theme}>
   {#if mounted}
     <Header />
+    {#if weather.loading}
+      <div class="loading-bar"><div class="loading-bar-inner"></div></div>
+    {/if}
     <main class="app-map">
       <Map bind:this={mapComponent} />
       <BottomSheet ariaLabel="Destinations">
@@ -196,6 +199,30 @@
     position: relative;
     z-index: 1;
     overflow: hidden;
+  }
+
+  /* Reserve space so the fixed bottom sheet handle doesn't cover the map */
+  @media (max-width: 767px) {
+    .app-map { padding-bottom: 44px; }
+  }
+
+  .loading-bar {
+    height: 3px;
+    background: var(--surface2, rgba(255,255,255,0.08));
+    flex-shrink: 0;
+    overflow: hidden;
+    z-index: 100;
+  }
+  .loading-bar-inner {
+    height: 100%;
+    width: 40%;
+    background: var(--accent, #e94560);
+    border-radius: 2px;
+    animation: loadslide 1.2s ease-in-out infinite;
+  }
+  @keyframes loadslide {
+    0%   { transform: translateX(-100%); }
+    100% { transform: translateX(350%); }
   }
 
   .loading {
