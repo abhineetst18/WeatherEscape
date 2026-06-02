@@ -24,10 +24,7 @@
     <span class="bsheet-toggle">{open ? '▼' : '▲'}</span>
   </button>
 
-  <div class="bsheet-content" aria-hidden={!open}
-    ontouchstart={(e) => e.stopPropagation()}
-    ontouchmove={(e) => e.stopPropagation()}
-  >
+  <div class="bsheet-content" aria-hidden={!open}>
     <slot />
   </div>
 </div>
@@ -77,6 +74,7 @@
       border-top-right-radius: 12px;
       padding: 8px 12px 20px;
     }
+    .bsheet-handle { touch-action: none; }
   }
 
   /* Desktop: behave as an ordinary container (use DestinationPanel's desktop rules) */
