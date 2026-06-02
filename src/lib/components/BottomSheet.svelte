@@ -24,7 +24,10 @@
     <span class="bsheet-toggle">{open ? '▼' : '▲'}</span>
   </button>
 
-  <div class="bsheet-content" aria-hidden={!open} ontouchstart|stopPropagation ontouchmove|stopPropagation>
+  <div class="bsheet-content" aria-hidden={!open}
+    ontouchstart={(e) => e.stopPropagation()}
+    ontouchmove={(e) => e.stopPropagation()}
+  >
     <slot />
   </div>
 </div>
