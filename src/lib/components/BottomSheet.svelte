@@ -24,7 +24,7 @@
     <span class="bsheet-toggle">{open ? '▼' : '▲'}</span>
   </button>
 
-  <div class="bsheet-content" aria-hidden={!open}>
+  <div class="bsheet-content" aria-hidden={!open} ontouchstart|stopPropagation ontouchmove|stopPropagation>
     <slot />
   </div>
 </div>
@@ -64,10 +64,11 @@
     .bsheet-toggle { margin-left: 8px; font-size: 12px; color: var(--text-dim); }
 
     .bsheet-content {
-      max-height: 60vh;
-      overflow-y: auto;
+      height: 60vh;
+      overflow-y: scroll;
       -webkit-overflow-scrolling: touch;
-      overscroll-behavior: contain;
+      touch-action: pan-y;
+      overscroll-behavior-y: contain;
       background: var(--surface);
       border-top-left-radius: 12px;
       border-top-right-radius: 12px;
