@@ -38,7 +38,7 @@
         <RadiusSlider />
       </div>
 
-      <!-- Base weather summary -->
+      <!-- Base weather summary (desktop) + mobile pill (mobile row 2) -->
       {#if weather.base}
         {@const dayData = weather.day === 'today' ? weather.base.today : weather.base.tomorrow}
         {@const w = dayData?.[weather.timePeriod] ?? dayData?.allDay}
@@ -51,6 +51,11 @@
             {#if w.windSpeed != null}
               <span class="base-detail">💨{w.windSpeed}m/s</span>
             {/if}
+          </span>
+          <span class="mobile-base-weather">
+            {getWeatherEmoji(w.conditionCode)} <span class="temp">{w.temperature}°</span>
+            {#if w.precipitation > 0}<span class="detail">💧{w.precipitation}mm</span>{/if}
+            {#if w.windSpeed != null}<span class="detail">💨{w.windSpeed}m/s</span>{/if}
           </span>
         {/if}
       {/if}
@@ -91,24 +96,6 @@
     <div class="location-dropdown">
       <LocationPicker onclose={() => showLocationPicker = false} />
     </div>
-  {/if}
-
-  <!-- Mobile-only base weather pill -->
-  {#if weather.base}
-    {@const dayDataMobile = weather.day === 'today' ? weather.base.today : weather.base.tomorrow}
-    {@const wm = dayDataMobile?.[weather.timePeriod] ?? dayDataMobile?.allDay}
-    {#if wm}
-      <div class="mobile-base-weather" aria-hidden="false">
-        <span class="emoji">{getWeatherEmoji(wm.conditionCode)}</span>
-        <span class="temp">{wm.temperature}°</span>
-        {#if wm.precipitation > 0}
-          <span class="detail">💧{wm.precipitation}mm</span>
-        {/if}
-        {#if wm.windSpeed != null}
-          <span class="detail">💨{wm.windSpeed}m/s</span>
-        {/if}
-      </div>
-    {/if}
   {/if}
 </header>
 
@@ -189,14 +176,21 @@
   @keyframes spin { to { transform: rotate(360deg); } }
 
   @media (max-width: 600px) {
+    /* Row 1: title + right controls. Row 2: location + weather pill */
+    .header-row { flex-wrap: wrap; padding: 6px 10px 0; gap: 0; }
+    .header-left { order: 1; flex: 0 0 auto; }
+    .header-right { order: 2; flex: 0 0 auto; margin-left: auto; }
+    .header-center { order: 3; flex: 0 0 100%; display: flex; align-items: center; gap: 6px; padding: 4px 0 6px; }
     .radius-inline { display: none; }
+    .base-weather { display: none; }
     .title { font-size: var(--text-base); }
-    .mobile-base-weather { display: flex; gap: 8px; align-items: center; margin-left: 8px; }
+    .location-btn { max-width: none; flex: 1; }
+    .mobile-base-weather { display: flex; gap: 4px; align-items: center; margin: 0; padding: 4px 8px; }
   }
 
-  .mobile-base-weather { display: none; position: relative; font-size: 14px; color: var(--text); background: var(--surface2); padding: 6px 10px; border-radius: 10px; margin: 8px; }
-  .mobile-base-weather .temp { font-weight: 700; }
-  .mobile-base-weather .detail { opacity: 0.9; margin-left: 6px; font-size: 13px; }
+  .mobile-base-weather { display: none; font-size: 13px; color: var(--text); background: var(--surface2); padding: 4px 8px; border-radius: 8px; white-space: nowrap; flex-shrink: 0; }
+  .mobile-base-weather .temp { font-weight: 700; margin-left: 2px; }
+  .mobile-base-weather .detail { opacity: 0.9; margin-left: 4px; font-size: 12px; }
 
   .header-right {
     display: flex;

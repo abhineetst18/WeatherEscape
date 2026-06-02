@@ -125,6 +125,15 @@
   .wx-item { display: flex; flex-direction: column; gap: 1px; font-size: var(--text-sm); }
   .wx-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.03em; }
   .wx-value { font-size: var(--text-base); font-weight: var(--font-semibold); }
+
+  /* Mobile: inline label + value on one row → smaller cards */
+  @media (max-width: 767px) {
+    .card-weather { grid-template-columns: 1fr 1fr; gap: 4px 8px; }
+    .wx-item { flex-direction: row; align-items: baseline; gap: 4px; }
+    .wx-label { font-size: 9px; white-space: nowrap; flex-shrink: 0; }
+    .wx-value { font-size: 12px; }
+    .delta { font-size: 10px; }
+  }
   .delta { font-size: var(--text-xs); font-weight: var(--font-semibold); margin-left: 2px; }
   .delta.positive { color: var(--positive); }
   .delta.negative { color: var(--negative); }

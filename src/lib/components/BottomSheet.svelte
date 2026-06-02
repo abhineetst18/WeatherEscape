@@ -66,6 +66,8 @@
     .bsheet-content {
       max-height: 60vh;
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
       background: var(--surface);
       border-top-left-radius: 12px;
       border-top-right-radius: 12px;

@@ -309,6 +309,29 @@
     color: var(--text) !important;
     border-color: rgba(255, 255, 255, 0.1) !important;
   }
+  /* Magnifier icon between zoom + and − */
+  :global(.leaflet-control-zoom-out) {
+    position: relative;
+  }
+  :global(.leaflet-control-zoom-out::before) {
+    content: '🔍';
+    display: block;
+    width: 100%;
+    font-size: 12px;
+    line-height: 1;
+    text-align: center;
+    padding: 3px 0;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    background: var(--surface);
+    pointer-events: none;
+    position: absolute;
+    top: -22px;
+    left: 0;
+  }
+  :global([data-theme="light"] .leaflet-control-zoom-out::before) {
+    border-color: rgba(0,0,0,0.15);
+  }
   :global([data-theme="light"] .leaflet-control-zoom a) {
     border-color: rgba(0, 0, 0, 0.2) !important;
   }
