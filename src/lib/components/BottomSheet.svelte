@@ -32,7 +32,7 @@
 <style>
   .bsheet { position: relative; }
 
-  /* Mobile: fixed bottom sheet */
+  /* Mobile: fixed bottom sheet — NO transform (causes scroll bugs on Android Chrome) */
   @media (max-width: 767px) {
     .bsheet {
       position: fixed;
@@ -40,41 +40,41 @@
       right: 0;
       bottom: 0;
       z-index: 1400;
-      pointer-events: auto;
-      display: block;
-      transition: transform 280ms cubic-bezier(.2,.8,.2,1), box-shadow 200ms ease;
-      transform: translateY(calc(100% - 44px));
-      will-change: transform;
+      height: 44px;
+      overflow: hidden;
+      transition: height 280ms cubic-bezier(.2,.8,.2,1), box-shadow 200ms ease;
     }
-    .bsheet.open { transform: translateY(0); box-shadow: 0 -10px 30px rgba(0,0,0,0.35); }
+    .bsheet.open {
+      height: 65vh;
+      box-shadow: 0 -10px 30px rgba(0,0,0,0.35);
+    }
 
     .bsheet-handle {
       width: 100%;
+      height: 44px;
+      flex-shrink: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 8px 12px;
+      padding: 0 12px;
       background: var(--surface);
       border-top: 1px solid rgba(255,255,255,0.04);
       cursor: pointer;
-      backdrop-filter: blur(6px);
+      touch-action: none;
     }
     .handle-bar { width: 36px; height: 4px; background: var(--text-dim); border-radius: 4px; display:inline-block; }
     .bsheet-label { flex: 1; text-align: left; font-size: 13px; font-weight: 600; color: var(--text); margin-left: 8px; }
     .bsheet-toggle { margin-left: 8px; font-size: 12px; color: var(--text-dim); }
 
     .bsheet-content {
-      height: 60vh;
-      overflow-y: scroll;
+      height: calc(65vh - 44px);
+      overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       touch-action: pan-y;
       overscroll-behavior-y: contain;
       background: var(--surface);
-      border-top-left-radius: 12px;
-      border-top-right-radius: 12px;
       padding: 8px 12px 20px;
     }
-    .bsheet-handle { touch-action: none; }
   }
 
   /* Desktop: behave as an ordinary container (use DestinationPanel's desktop rules) */
