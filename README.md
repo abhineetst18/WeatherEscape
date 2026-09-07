@@ -59,20 +59,27 @@ npm run preview
 
 ## Configuration
 
-WeatherEscape has no `.env` file and no required configuration before running.
+The light and dark maps require a free [CARTO basemap API key](https://carto.com/basemaps/apikey).
+For local development, copy `.env.example` to `.env.local` and set:
+
+```dotenv
+VITE_CARTO_API_KEY=your_key_here
+```
+
+Vite embeds this browser key in the built site. Do not commit `.env.local`; restrict the key to your deployed domain in CARTO.
 
 ### OpenRouteService API key (optional)
 
 Without a key, drive times are estimated using straight-line distance × 1.3. For accurate isochrones, get a free key at [openrouteservice.org](https://openrouteservice.org) and enter it in **Settings → API Key**. The key is stored in `localStorage` — it never leaves the browser.
 
-### Free APIs (no key needed)
+### External APIs
 
 | API | Purpose |
 |---|---|
 | SMHI Open Data | Swedish weather forecasts |
 | MET Norway (YR) | Norwegian and Danish forecasts |
 | OpenStreetMap / Nominatim | Place-name search and geocoding |
-| CARTO | Map tiles (light and dark) |
+| CARTO | Map tiles (light and dark); free API key required |
 
 ## Project Structure
 
@@ -136,16 +143,13 @@ Weights are configurable per session in Settings.
 
 ### GitHub Pages
 
-```bash
-# Build with relative asset paths (required for GitHub Pages subdirectory hosting)
-npm run build:gh-pages
+Add `CARTO_API_KEY` under **Settings → Secrets and variables → Actions**, then set
+**Settings → Pages → Build and deployment → Source** to **GitHub Actions**.
+Pushes to `main` build and deploy automatically. The workflow passes `--base=./`
+to Vite so assets work under the GitHub Pages repository path.
 
-# Deploy the contents of dist/ to your gh-pages branch or Pages source folder
-```
-
-The `build:gh-pages` script passes `--base=./` to Vite, producing relative asset paths that work under any subdirectory URL.
-
-For other static hosts (Netlify, Vercel, Cloudflare Pages), `npm run build` is sufficient — set the publish directory to `dist/`.
+For other static hosts (Netlify, Vercel, Cloudflare Pages), set
+`VITE_CARTO_API_KEY`, run `npm run build`, and publish `dist/`.
 
 ## Attribution
 

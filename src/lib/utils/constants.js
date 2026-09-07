@@ -46,9 +46,11 @@ export const API_URLS = {
 };
 
 // Map tile URLs
+const cartoApiKey = import.meta.env?.VITE_CARTO_API_KEY?.trim() || '';
+const cartoKeyQuery = cartoApiKey ? `?key=${encodeURIComponent(cartoApiKey)}` : '';
 export const MAP_TILES = {
-  dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-  light: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+  dark: `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png${cartoKeyQuery}`,
+  light: `https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png${cartoKeyQuery}`,
   osm: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
 };
 

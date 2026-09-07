@@ -271,6 +271,7 @@ where:
 - `CACHE_DURATIONS` → cacheService, all services that cache
 - `QUALITY_COLORS` → scoringService, mapHelpers
 - `MAP_DEFAULTS` → Map.svelte
+- `MAP_TILES` → mapHelpers.getTileUrl → Map.svelte initial layer and theme swaps; CARTO URLs require build-time `VITE_CARTO_API_KEY`
 - `RADIUS_OPTIONS` → RadiusSlider
 - `SUPPORTED_LOCALES` → i18nStore, Header
 
@@ -323,6 +324,7 @@ where:
 
 ## PWA / Build Config
 
+- **CARTO key:** Local builds read `VITE_CARTO_API_KEY`; `.github/workflows/deploy-pages.yml` maps the `CARTO_API_KEY` repository secret into that Vite variable
 - **Vite PWA plugin** with `autoUpdate` registration
 - **Service worker caching:**
   - Map tiles (CacheFirst, 500 entries, 7 days)
