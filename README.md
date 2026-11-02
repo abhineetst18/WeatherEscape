@@ -151,6 +151,39 @@ to Vite so assets work under the GitHub Pages repository path.
 For other static hosts (Netlify, Vercel, Cloudflare Pages), set
 `VITE_CARTO_API_KEY`, run `npm run build`, and publish `dist/`.
 
+### Troubleshooting map tiles
+
+| Tile text | Cause | Fix |
+|-----------|-------|-----|
+| `API KEY REQUIRED` | No key was embedded at build time | Check the secret exists (`gh secret list`), Pages source is **GitHub Actions**, and the latest deploy run succeeded |
+| `API key not found` | Key is invalid, revoked, or not allowed for this domain | Create a new key in CARTO, update the secret (`gh secret set CARTO_API_KEY`), and re-run the deploy workflow |
+
+### Alternative tile providers
+
+If CARTO changes its terms, pricing, or key requirements, these are the fallbacks:
+
+| Provider | Key | Dark/light | Effort | Notes |
+|----------|-----|------------|--------|-------|
+| **Esri World Dark/Light Gray Canvas** | None | Yes (labels are a separate reference layer) | Small | Best keyless option; closest look to CARTO. `server.arcgisonline.com` is already allowed by the CSP. Fine for personal, non-commercial use. |
+| **Stadia Maps (Alidade Smooth / Smooth Dark)** | Account + domain registration (no key in code) | Yes | Small | Very good look; free for non-commercial use. |
+| **OpenStreetMap standard** | None | Light only | Small | OSM's tile usage policy discourages heavy app use; no dark style. |
+| **OpenFreeMap / MapTiler** | None / free key | Yes | Large | Vector tiles; requires switching from Leaflet raster layers to MapLibre GL. |
+
+Esri URLs (append a labels layer from
+`.../Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}` or `World_Light_Gray_Reference`):
+
+```text
+https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}
+https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}
+```
+
+To switch providers, update:
+
+- `MAP_TILES` and `MAP_ATTRIBUTION` in `src/lib/utils/constants.js`
+- `img-src` in the Content-Security-Policy `<meta>` tag in `index.html`
+- The tile `runtimeCaching` `urlPattern` in `vite.config.js`
+- The key check and `VITE_CARTO_API_KEY` env in `.github/workflows/deploy-pages.yml` (remove them if the provider is keyless)
+
 ## Attribution
 
 - Weather data: [SMHI Open Data](https://opendata.smhi.se) and [MET Norway / yr.no](https://yr.no)
