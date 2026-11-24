@@ -9,6 +9,7 @@
     "language": "Language"
   },
   "location": {
+    "selectLocation": "Select a base location",
     "current": "Current Location",
     "saved": "Saved Locations",
     "add": "Add Location",
@@ -23,6 +24,9 @@
     "hours": "{value} hr"
   },
   "weather": {
+    "retrievedAt": "Base forecast retrieved: {value}",
+    "loading": "Loading forecast…",
+    "unavailable": "Forecast unavailable for this selection",
     "temperature": "Temperature",
     "precipitation": "Precipitation",
     "cloudCover": "Cloud cover",
@@ -41,12 +45,13 @@
     "cloudier": "+{value}%"
   },
   "quality": {
-    "great": "Great",
-    "moderate": "Moderate",
-    "marginal": "Marginal",
+    "muchBetter": "Much better",
+    "better": "Better",
+    "similar": "Similar",
     "worse": "Worse"
   },
   "destinations": {
+    "noForecast": "No destination forecasts available for this selection.",
     "title": "Destinations",
     "empty": "No destinations found. Adjust your radius or location.",
     "loading": "Finding destinations with better weather...",
@@ -92,6 +97,7 @@
     "afternoon": "Afternoon",
     "evening": "Evening",
     "periodLabel": "Time of day",
+    "noDataForDate": "No base forecast available for this date.",
     "noDataForPeriod": "No forecast data for this time period. Try All Day or a future period.",
     "minutes": "min",
     "hours": "hr"

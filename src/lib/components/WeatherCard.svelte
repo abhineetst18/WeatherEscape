@@ -1,28 +1,29 @@
 <script>
   import { t } from '../stores/i18nStore.svelte.js';
-  import { getWeatherEmoji } from '../utils/weatherHelpers.js';
   import { getQualityInfo } from '../services/scoringService.js';
   import { formatDriveTime } from '../utils/mapHelpers.js';
 
-  let { destination, onclick = () => {} } = $props();
+  let { destination, loading = false, onclick = () => {} } = $props();
 
   const quality = $derived(destination.qualityScore != null ? getQualityInfo(destination.qualityScore) : null);
+  const qualityLabel = $derived(quality ? t(`quality.${quality.label}`) : '');
+  const statusLabel = $derived(loading && !destination.forecast ? t('weather.loading') : t('weather.unavailable'));
   const typeEmojis = { town: '🏘️', beach: '🏖️', hiking: '🥾', attraction: '🎯', custom: '📌' };
 </script>
 
-<button class="card" onclick={() => onclick(destination)} aria-label="{destination.name} — {quality?.label ?? 'loading'}">
+<button class="card" onclick={() => onclick(destination)} aria-label="{destination.name} — {qualityLabel || statusLabel}">
   <!-- Header row -->
   <div class="card-header">
     <div class="card-left">
       {#if quality}
-        <span class="quality-dot" style="background:{quality.color}" title={quality.label}></span>
+        <span class="quality-dot" style="background:{quality.color}" title={qualityLabel}></span>
       {/if}
       <span class="card-name">{destination.name}</span>
       <span class="card-type">{typeEmojis[destination.type] ?? '📌'}</span>
     </div>
     <div class="card-right">
       {#if destination.qualityScore != null}
-        <span class="score" style="color:{quality?.color}" title="{quality?.label} ({destination.qualityScore}/100)">
+        <span class="score" style="color:{quality?.color}" title="{qualityLabel} ({destination.qualityScore}/100)">
           {destination.qualityScore}
         </span>
       {/if}
@@ -81,7 +82,7 @@
       </div>
     </div>
   {:else}
-    <div class="card-loading">Loading weather...</div>
+    <div class="card-loading">{statusLabel}</div>
   {/if}
 
   <!-- Footer: drive time + type -->

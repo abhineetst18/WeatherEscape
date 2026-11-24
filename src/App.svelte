@@ -1,9 +1,10 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import { settings, applyTheme } from './lib/stores/settingsStore.svelte.js';
   import { initI18n } from './lib/stores/i18nStore.svelte.js';
-  import { weather, fetchBaseWeather, fetchDestinationWeather, toggleDay, setTimePeriod } from './lib/stores/weatherStore.svelte.js';
-  import { clearExpiredCache, clearWeatherCache } from './lib/services/cacheService.js';
+  import { weather, loadForecast, toggleDay, setTimePeriod } from './lib/stores/weatherStore.svelte.js';
+  import { clearWeatherCache } from './lib/services/cacheService.js';
+  import { getForecastDates } from './lib/utils/weatherHelpers.js';
   import { discoverDestinations, fallbackDestinationsFor } from './lib/services/destinationService.js';
   import { queueDriveTime, estimateDriveTime, cancelQueuedRequests } from './lib/services/routingService.js';
   import Header from './lib/components/Header.svelte';
@@ -16,6 +17,12 @@
   let showSettings = $state(false);
   let mapComponent = $state(null);
   let activeLoadId = 0;
+  let loadDate;
+
+  function refreshWeather() {
+    clearWeatherCache();
+    loadWeatherData();
+  }
 
   onMount(() => {
     applyTheme(settings.theme);
@@ -23,12 +30,29 @@
       mounted = true;
     });
     const handleOpenSettings = () => { showSettings = true; };
-    const handleRefresh = () => { clearWeatherCache(); loadWeatherData(); };
+    let midnightTimer;
+    function checkDate() {
+      clearTimeout(midnightTimer);
+      if (mounted && loadDate !== getForecastDates().today) loadWeatherData();
+      const midnight = new Date();
+      midnight.setHours(24, 0, 0, 0);
+      midnightTimer = setTimeout(checkDate, Math.max(1, midnight.getTime() - Date.now()));
+    }
+    checkDate();
     window.addEventListener('opensettings', handleOpenSettings);
-    window.addEventListener('refreshweather', handleRefresh);
+    window.addEventListener('refreshweather', refreshWeather);
+    window.addEventListener('focus', checkDate);
+    window.addEventListener('pageshow', checkDate);
+    document.addEventListener('visibilitychange', checkDate);
     return () => {
+      activeLoadId++;
+      cancelQueuedRequests();
+      clearTimeout(midnightTimer);
       window.removeEventListener('opensettings', handleOpenSettings);
-      window.removeEventListener('refreshweather', handleRefresh);
+      window.removeEventListener('refreshweather', refreshWeather);
+      window.removeEventListener('focus', checkDate);
+      window.removeEventListener('pageshow', checkDate);
+      document.removeEventListener('visibilitychange', checkDate);
     };
   });
 
@@ -69,35 +93,45 @@
       case 'r':
       case 'R':
         e.preventDefault();
-        clearWeatherCache();
-        loadWeatherData();
+        refreshWeather();
         break;
     }
   }
 
-  async function loadWeatherData() {
+  function activeLocation() {
+    return settings.savedLocations.find(l => l.id === settings.activeLocationId);
+  }
+
+  function loadWeatherData(loc = activeLocation(), radius = settings.drivingRadiusMinutes) {
     const loadId = ++activeLoadId;
     cancelQueuedRequests(); // Discard stale ORS requests from previous loads
-    const loc = settings.savedLocations.find(l => l.id === settings.activeLocationId);
-    if (!loc) return;
+    const location = loc ? { id: loc.id, lat: loc.lat, lon: loc.lon } : null;
+    const dates = getForecastDates();
+    loadDate = dates.today;
+    const ownsLoad = () => {
+      if (activeLoadId !== loadId || settings.drivingRadiusMinutes !== radius) return false;
+      const current = activeLocation();
+      return current?.id === location?.id && current?.lat === location?.lat && current?.lon === location?.lon;
+    };
+    return loadForecast({
+      location, dates, ownsLoad,
+      discover: isCurrent => findDestinations(location, radius, isCurrent),
+      getDriveTime: settings.openRouteServiceKey
+        ? dest => queueDriveTime(location.lat, location.lon, dest.lat, dest.lon)
+        : null
+    });
+  }
 
-    // 1. Fetch base weather (passes loadId so it can abort stale writes)
-    await fetchBaseWeather(loadId, () => activeLoadId);
-    if (loadId !== activeLoadId) return; // Stale load — bail
-
-    // Abort if base fetch failed
-    if (!weather.base) return;
-
-    // 2. Discover destinations
-    const radiusKm = (settings.drivingRadiusMinutes / 60) * 70;
+  async function findDestinations(loc, radius, isCurrent) {
+    const radiusKm = (radius / 60) * 70;
     let destinations = await discoverDestinations(loc.lat, loc.lon, radiusKm);
+    if (!isCurrent()) return [];
     console.log('[loadWeatherData] radiusKm:', radiusKm, 'found:', destinations?.length);
     if ((!destinations || destinations.length === 0)) {
       console.warn('[loadWeatherData] discoverDestinations returned none, loading curated fallback');
       destinations = fallbackDestinationsFor(loc.lat, loc.lon, radiusKm);
       console.log('[loadWeatherData] fallback count:', destinations.length);
     }
-    if (loadId !== activeLoadId) return;
 
     // 3. Estimate drive times
     for (const dest of destinations) {
@@ -109,44 +143,22 @@
 
     // 4. Filter by drive time — allow 20% tolerance. If filter removes everything
     // (can happen on mobile with different GPS location or tight radius), use all.
-    let withinRadius = destinations.filter(d => d.driveTimeMinutes <= settings.drivingRadiusMinutes * 1.2);
+    let withinRadius = destinations.filter(d => d.driveTimeMinutes <= radius * 1.2);
     if (withinRadius.length === 0 && destinations.length > 0) {
       console.warn('[loadWeatherData] radius filter removed all destinations, using unfiltered list');
       withinRadius = destinations;
     }
 
-    // 5. Fetch weather for all destinations
-    await fetchDestinationWeather(withinRadius, loadId, () => activeLoadId);
-    if (loadId !== activeLoadId) return;
-
-    // 6. Queue actual drive times via ORS (if key available)
-    if (settings.openRouteServiceKey) {
-      for (const dest of weather.destinations.slice(0, 10)) {
-        queueDriveTime(loc.lat, loc.lon, dest.lat, dest.lon).then(result => {
-          if (loadId !== activeLoadId) return; // Stale — ignore
-          if (result) {
-            const idx = weather.destinations.findIndex(d => d.id === dest.id);
-            if (idx >= 0) {
-              weather.destinations[idx] = {
-                ...weather.destinations[idx],
-                driveTimeMinutes: result.durationMinutes,
-                driveDistanceKm: result.distanceKm,
-                isEstimate: result.isEstimate
-              };
-            }
-          }
-        });
-      }
-    }
+    return withinRadius;
   }
 
   // React to location or radius changes (single trigger point for data loading)
-  $effect(() => {
-    const _locId = settings.activeLocationId;
-    const _radius = settings.drivingRadiusMinutes;
-    if (mounted) {
-      loadWeatherData();
-    }
+  $effect.pre(() => {
+    if (!mounted) return;
+    const loc = activeLocation();
+    const location = loc ? { id: loc.id, lat: loc.lat, lon: loc.lon } : null;
+    const radius = settings.drivingRadiusMinutes;
+    untrack(() => loadWeatherData(location, radius));
   });
 
   function handleSelectDestination(dest) {

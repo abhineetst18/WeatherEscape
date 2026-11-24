@@ -1,11 +1,12 @@
 import { settings } from './settingsStore.svelte.js';
 import { fetchWeather, fetchWeatherBatch } from '../services/weatherService.js';
-import { calculateDelta } from '../utils/weatherHelpers.js';
+import { calculateDelta, getForecastDates } from '../utils/weatherHelpers.js';
 import { calculateQualityScore } from '../services/scoringService.js';
 
-/** @type {{ base: {today: any, tomorrow: any} | null, destinations: any[], loading: boolean, error: string | null, day: 'today' | 'tomorrow', timePeriod: 'allDay' | 'morning' | 'afternoon' | 'evening', lastFetched: number | null }} */
+/** @type {{ base: import('../types/index.js').Forecast | null, dates: import('../types/index.js').ForecastDates | null, destinations: any[], loading: boolean, error: string | null, day: 'today' | 'tomorrow', timePeriod: 'allDay' | 'morning' | 'afternoon' | 'evening', lastFetched: number | null }} */
 export const weather = $state({
   base: null,
+  dates: null,
   destinations: [],
   loading: false,
   error: null,
@@ -14,149 +15,107 @@ export const weather = $state({
   lastFetched: null
 });
 
-/**
- * Get weather data for a specific day + time period.
- * @param {{ today: any, tomorrow: any }} data
- * @param {'today'|'tomorrow'} day
- * @param {'allDay'|'morning'|'afternoon'|'evening'} period
- * @returns {any}
- */
-function getPeriodWeather(data, day, period) {
-  if (!data) return null;
-  const dayData = day === 'today' ? data.today : data.tomorrow;
-  return dayData?.[period] ?? null;
+export function getSelectedBaseWeather() {
+  return weather.base?.[weather.day]?.[weather.timePeriod] ?? null;
+}
+
+function scoreDestination(destination) {
+  const base = getSelectedBaseWeather();
+  const forecast = destination.forecast;
+  const day = weather.day;
+  const selected = forecast?.dates[day] === weather.base?.dates[day]
+    ? forecast?.[day]?.[weather.timePeriod] ?? null
+    : null;
+  const delta = calculateDelta(base, selected);
+  return {
+    ...destination,
+    weather: delta ? selected : null,
+    delta,
+    qualityScore: delta ? calculateQualityScore(delta, settings.weights) : null
+  };
+}
+
+function scoreOrder(a, b) {
+  return (b.qualityScore ?? -1) - (a.qualityScore ?? -1);
 }
 
 /**
- * Get weather data for the currently selected day + time period.
- * @param {{ today: any, tomorrow: any }} data
- * @returns {any}
+ * Replace the previous forecast immediately. App supplies the load owner and
+ * the discovery/routing functions bound to the same location and radius.
  */
-function getSelectedWeather(data) {
-  return getPeriodWeather(data, weather.day, weather.timePeriod);
-}
+export async function loadForecast({ location, dates, ownsLoad, discover, getDriveTime }) {
+  const isCurrent = () => {
+    if (!ownsLoad()) return false;
+    const current = getForecastDates();
+    return dates.today === current.today && dates.tomorrow === current.tomorrow;
+  };
+  if (!isCurrent()) return;
 
-/**
- * Fetch weather for the active base location.
- * @param {number} [loadId] - If provided, aborts state write if a newer load has started.
- * @param {() => number} [getActiveLoadId] - Callback to get the current active load id.
- */
-export async function fetchBaseWeather(loadId, getActiveLoadId) {
-  const loc = settings.savedLocations.find(l => l.id === settings.activeLocationId);
-  if (!loc) return;
-
-  weather.loading = true;
+  weather.base = null;
+  weather.dates = dates;
+  weather.destinations = [];
   weather.error = null;
+  weather.lastFetched = null;
+  weather.loading = Boolean(location);
+  if (!location) return;
+
+  function updateDestination(id, update) {
+    if (!isCurrent()) return;
+    const index = weather.destinations.findIndex(d => d.id === id);
+    if (index >= 0) weather.destinations[index] = update(weather.destinations[index]);
+  }
 
   try {
-    const result = await fetchWeather(loc.lat, loc.lon);
-    // WHY: bail if a newer load superseded this one during the await
-    if (loadId !== undefined && getActiveLoadId?.() !== loadId) return;
-    if (!result) {
-      weather.error = 'Weather data unavailable. Check your connection.';
+    const base = await fetchWeather(location.lat, location.lon, dates, isCurrent);
+    if (!isCurrent()) return;
+    if (!base) {
+      weather.error = 'errors.noWeatherData';
       return;
     }
-    weather.base = result;
-    weather.lastFetched = Date.now();
-  } catch (e) {
-    weather.error = e.message;
+    weather.base = base;
+    weather.lastFetched = base.fetchedAt;
+    if (!base.today && !base.tomorrow) return;
+
+    const destinations = await discover(isCurrent);
+    if (!isCurrent()) return;
+    weather.destinations = destinations.map(d => scoreDestination({ ...d, forecast: null }));
+    await fetchWeatherBatch(destinations, (id, forecast) => {
+      updateDestination(id, d => scoreDestination({ ...d, forecast }));
+    }, dates, isCurrent);
+    if (!isCurrent()) return;
+    weather.destinations.sort(scoreOrder);
+
+    if (getDriveTime) {
+      for (const dest of weather.destinations.slice(0, 10)) {
+        getDriveTime(dest).then(result => {
+          if (!result) return;
+          updateDestination(dest.id, d => ({
+            ...d,
+            driveTimeMinutes: result.durationMinutes,
+            driveDistanceKm: result.distanceKm,
+            isEstimate: result.isEstimate
+          }));
+        }).catch(() => { /* Keep the estimate if routing fails. */ });
+      }
+    }
+  } catch {
+    if (isCurrent()) weather.error = 'errors.networkError';
   } finally {
-    // Only clear loading flag if we are still the active load
-    if (loadId === undefined || getActiveLoadId?.() === loadId) {
-      weather.loading = false;
-    }
+    if (isCurrent()) weather.loading = false;
   }
 }
 
-/**
- * Fetch weather for all destinations and calculate scores.
- * @param {Array<import('../types/index.js').Destination>} destinations
- * @param {number} [loadId] - If provided, aborts state writes if a newer load has started.
- * @param {() => number} [getActiveLoadId] - Callback to get the current active load id.
- */
-export async function fetchDestinationWeather(destinations, loadId, getActiveLoadId) {
-  if (!weather.base) return;
-
-  weather.loading = true;
-  weather.destinations = destinations.map(d => ({
-    ...d, weather: null, weatherToday: null, weatherTomorrow: null, delta: null, qualityScore: null
-  }));
-
-  // WHY: snapshot day+period at batch start so mid-flight toggles don't mix
-  // a stale base snapshot with a new period for destination callbacks.
-  const snapshotDay = weather.day;
-  const snapshotPeriod = weather.timePeriod;
-  const baseWeather = getPeriodWeather(weather.base, snapshotDay, snapshotPeriod);
-
-  await fetchWeatherBatch(
-    destinations.map(d => ({ lat: d.lat, lon: d.lon, id: d.id })),
-    (id, result) => {
-      // WHY: drop callback if a newer load superseded this one
-      if (loadId !== undefined && getActiveLoadId?.() !== loadId) return;
-      const idx = weather.destinations.findIndex(d => d.id === id);
-      if (idx === -1 || !result) return;
-
-      const destWeather = getPeriodWeather(result, snapshotDay, snapshotPeriod);
-      const delta = baseWeather && destWeather ? calculateDelta(baseWeather, destWeather) : null;
-      const qualityScore = delta ? calculateQualityScore(delta, settings.weights) : null;
-
-      weather.destinations[idx] = {
-        ...weather.destinations[idx],
-        weatherToday: result.today,
-        weatherTomorrow: result.tomorrow,
-        weather: destWeather,
-        delta,
-        qualityScore
-      };
-    }
-  );
-
-  if (loadId === undefined || getActiveLoadId?.() === loadId) {
-    // Sort by quality score descending
-    weather.destinations.sort((a, b) => (b.qualityScore ?? 0) - (a.qualityScore ?? 0));
-    weather.loading = false;
-  }
-}
-
-/**
- * Toggle between today and tomorrow forecasts.
- * Recalculates all deltas and scores.
- */
 export function toggleDay() {
   weather.day = weather.day === 'today' ? 'tomorrow' : 'today';
   recalculateScores();
 }
 
-/**
- * Set the time period and recalculate scores.
- * @param {'allDay' | 'morning' | 'afternoon' | 'evening'} period
- */
+/** @param {'allDay' | 'morning' | 'afternoon' | 'evening'} period */
 export function setTimePeriod(period) {
   weather.timePeriod = period;
   recalculateScores();
 }
 
-/**
- * Recalculate all deltas and scores (e.g., after weight, day, or period change).
- */
 export function recalculateScores() {
-  if (!weather.base) return;
-  const baseWeather = getSelectedWeather(weather.base);
-
-  // If base has no data for this period, clear all destination weather
-  if (!baseWeather) {
-    weather.destinations = weather.destinations.map(d => ({
-      ...d, weather: null, delta: null, qualityScore: null
-    }));
-    return;
-  }
-
-  weather.destinations = weather.destinations.map(d => {
-    const dayData = weather.day === 'today' ? d.weatherToday : d.weatherTomorrow;
-    const destWeather = dayData?.[weather.timePeriod] ?? null;
-    if (!destWeather) return { ...d, weather: null, delta: null, qualityScore: null };
-    const delta = calculateDelta(baseWeather, destWeather);
-    const qualityScore = calculateQualityScore(delta, settings.weights);
-    return { ...d, weather: destWeather, delta, qualityScore };
-  }).sort((a, b) => (b.qualityScore ?? 0) - (a.qualityScore ?? 0));
+  weather.destinations = weather.destinations.map(scoreDestination).sort(scoreOrder);
 }

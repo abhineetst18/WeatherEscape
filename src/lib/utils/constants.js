@@ -29,12 +29,12 @@ export const DEFAULT_WEIGHTS = {
   uv: 0.05
 };
 
-// Quality score color system (PRD §6.2)
+// Shared quality bands, best first; boundary values are inclusive.
 export const QUALITY_COLORS = {
-  great:    { min: 80, max: 100, color: '#00b894', label: 'Great' },
-  moderate: { min: 50, max: 79,  color: '#fdcb6e', label: 'Moderate' },
-  marginal: { min: 20, max: 49,  color: '#e17055', label: 'Marginal' },
-  worse:    { min: 0,  max: 19,  color: '#d63031', label: 'Worse' }
+  muchBetter: { min: 65, color: '#00b894' },
+  better:     { min: 56, color: '#55a630' },
+  similar:    { min: 45, color: '#fdcb6e' },
+  worse:      { min: 0,  color: '#d63031' }
 };
 
 // API URLs

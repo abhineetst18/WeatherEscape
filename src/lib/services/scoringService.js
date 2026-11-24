@@ -19,17 +19,18 @@ export function calculateQualityScore(delta, weights = DEFAULT_WEIGHTS) {
   const precipScore = normalize(-delta.precipitation, -20, 20);     // Less rain = better
   const tempScore = normalize(delta.temperature, -15, 15);          // Warmer = better
   const windScore = normalize(-delta.windSpeed, -20, 20);           // Less wind = better
-  const uvScore = delta.uvIndex != null ? normalize(delta.uvIndex, -5, 5) : 0.5; // More UV = better (neutral if unavailable)
-
-  const raw = (
-    weights.sunshine * sunshineScore +
-    weights.precipitation * precipScore +
-    weights.temperature * tempScore +
-    weights.wind * windScore +
-    weights.uv * uvScore
+  const scores = {
+    sunshine: sunshineScore, precipitation: precipScore, temperature: tempScore, wind: windScore,
+    uv: Number.isFinite(delta.uvIndex) ? normalize(delta.uvIndex, -5, 5) : null
+  };
+  const valid = Object.entries(scores).filter(([key, score]) =>
+    Number.isFinite(score) && Number.isFinite(weights?.[key]) && weights[key] > 0
   );
-
-  return Math.round(clamp(raw * 100, 0, 100));
+  if (!valid.length) return 50;
+  const maxWeight = Math.max(...valid.map(([key]) => weights[key]));
+  const total = valid.reduce((sum, [key]) => sum + weights[key] / maxWeight, 0);
+  const weighted = valid.reduce((sum, [key, score]) => sum + (weights[key] / maxWeight) * score, 0);
+  return Math.round(clamp((weighted / total) * 100, 0, 100));
 }
 
 /**
@@ -60,8 +61,8 @@ function clamp(value, min, max) {
  * @returns {{ label: string, color: string }}
  */
 export function getQualityInfo(score) {
-  if (score >= QUALITY_COLORS.great.min) return { label: 'great', color: QUALITY_COLORS.great.color };
-  if (score >= QUALITY_COLORS.moderate.min) return { label: 'moderate', color: QUALITY_COLORS.moderate.color };
-  if (score >= QUALITY_COLORS.marginal.min) return { label: 'marginal', color: QUALITY_COLORS.marginal.color };
+  for (const [label, { min, color }] of Object.entries(QUALITY_COLORS)) {
+    if (score >= min) return { label, color };
+  }
   return { label: 'worse', color: QUALITY_COLORS.worse.color };
 }

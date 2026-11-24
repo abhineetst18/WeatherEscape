@@ -17,18 +17,16 @@ export function cacheGet(key) {
       return null;
     }
     const { data, expiry } = parsed;
-    if (expiry && Date.now() > expiry) {
-      localStorage.removeItem(CACHE_PREFIX + key);
-      return null;
-    }
-    // Invalidate stale weather cache that lacks period structure
-    if (key.startsWith('weather:') && data && !data.today?.allDay) {
+    const expired = key.startsWith('weather:')
+      ? !Number.isFinite(expiry) || Date.now() >= expiry
+      : expiry && Date.now() > expiry;
+    if (expired) {
       localStorage.removeItem(CACHE_PREFIX + key);
       return null;
     }
     return data;
   } catch {
-    localStorage.removeItem(CACHE_PREFIX + key);
+    cacheInvalidate(key);
     return null;
   }
 }
@@ -62,7 +60,7 @@ export function cacheSet(key, data, ttlMs) {
  * @param {string} key
  */
 export function cacheInvalidate(key) {
-  localStorage.removeItem(CACHE_PREFIX + key);
+  try { localStorage.removeItem(CACHE_PREFIX + key); } catch { /* Storage may be disabled. */ }
 }
 
 /**
@@ -89,21 +87,26 @@ export function clearExpiredCache() {
  * immediately take effect rather than waiting for the 24h TTL.
  */
 export function clearWeatherCache() {
-  for (let i = localStorage.length - 1; i >= 0; i--) {
-    const k = localStorage.key(i);
-    if (k?.startsWith(CACHE_PREFIX + 'weather:') || k?.startsWith(CACHE_PREFIX + 'dest')) {
-      localStorage.removeItem(k);
+  try {
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i);
+      if (k?.startsWith(CACHE_PREFIX + 'weather:') || k?.startsWith(CACHE_PREFIX + 'dest')) {
+        localStorage.removeItem(k);
+      }
     }
-  }
+  } catch { /* Refresh still works when storage is disabled. */ }
 }
 
 /**
- * Build a cache key from components, rounding lat/lon to 2 decimals.
+ * Build a cache key from components, rounding numbers by default.
  * @param {string} prefix
  * @param  {...any} parts
  * @returns {string}
  */
 export function buildCacheKey(prefix, ...parts) {
+  // Match ORS coordinate interpolation and bypass legacy rounded route entries.
+  if (prefix === 'route') return `route:v2:${parts.map(String).join(':')}`;
+
   const normalized = parts.map(p =>
     typeof p === 'number' ? p.toFixed(2) : String(p)
   );

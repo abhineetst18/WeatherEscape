@@ -1,4 +1,5 @@
-import { MAP_TILES, MAP_ATTRIBUTION, MAP_DEFAULTS } from './constants.js';
+import { MAP_TILES } from './constants.js';
+import { getQualityInfo } from '../services/scoringService.js';
 
 /**
  * Get the tile URL based on theme.
@@ -15,10 +16,7 @@ export function getTileUrl(theme) {
  * @returns {string} hex color
  */
 export function getQualityColor(score) {
-  if (score >= 80) return '#00b894';
-  if (score >= 50) return '#fdcb6e';
-  if (score >= 20) return '#e17055';
-  return '#d63031';
+  return getQualityInfo(score).color;
 }
 
 /**

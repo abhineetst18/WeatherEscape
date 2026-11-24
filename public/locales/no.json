@@ -9,6 +9,7 @@
     "language": "Språk"
   },
   "location": {
+    "selectLocation": "Velg et utgangspunkt",
     "current": "Nåværende posisjon",
     "saved": "Lagrede steder",
     "add": "Legg til sted",
@@ -23,6 +24,9 @@
     "hours": "{value} t"
   },
   "weather": {
+    "retrievedAt": "Værvarsel for utgangspunktet hentet: {value}",
+    "loading": "Henter værvarsel…",
+    "unavailable": "Ikke noe værvarsel for dette valget",
     "temperature": "Temperatur",
     "precipitation": "Nedbør",
     "cloudCover": "Skydekke",
@@ -41,12 +45,13 @@
     "cloudier": "+{value}%"
   },
   "quality": {
-    "great": "Utmerket",
-    "moderate": "Moderat",
-    "marginal": "Marginal",
+    "muchBetter": "Mye bedre",
+    "better": "Bedre",
+    "similar": "Omtrent likt",
     "worse": "Dårligere"
   },
   "destinations": {
+    "noForecast": "Ingen værvarsler for reisemålene for dette valget.",
     "title": "Reisemål",
     "empty": "Ingen reisemål funnet. Juster radius eller posisjon.",
     "loading": "Søker etter steder med bedre vær...",
@@ -92,6 +97,7 @@
     "afternoon": "Ettermiddag",
     "evening": "Kveld",
     "periodLabel": "Tid på dagen",
+    "noDataForDate": "Ikke noe værvarsel for utgangspunktet på denne datoen.",
     "noDataForPeriod": "Ingen prognose for denne tidsperioden. Prøv Hele dagen eller en fremtidig periode.",
     "minutes": "min",
     "hours": "t"

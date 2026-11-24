@@ -30,20 +30,20 @@
 - `src/main.js` → imports `App.svelte`, mounts to `#app`
 
 ### App.svelte (Orchestrator)
-- **Imports from stores:** `settings`, `applyTheme` (settingsStore); `weather`, `fetchBaseWeather`, `fetchDestinationWeather`, `toggleDay`, `setTimePeriod` (weatherStore); `initI18n` (i18nStore)
+- **Imports from stores:** `settings`, `applyTheme` (settingsStore); `weather`, `loadForecast`, `toggleDay`, `setTimePeriod` (weatherStore); `initI18n` (i18nStore)
 - **Imports from services:** `discoverDestinations` (destinationService); `queueDriveTime`, `estimateDriveTime` (routingService)
 - **Imports components:** Header, Map, DestinationPanel, SettingsModal
-- **Owns:** `loadWeatherData()` orchestration, stale-load cancellation via `activeLoadId`
-- **Reactive triggers:** `$effect` on `settings.activeLocationId` + `settings.drivingRadiusMinutes`
+- **Owns:** `loadWeatherData()`, the location/radius snapshot, and load ownership via `activeLoadId`. The store applies results only while that load still owns state and its local dates still match.
+- **Triggers:** `$effect.pre` on the active location and radius; refresh event / R shortcut; local midnight, with focus, page-show and visibility checks for resumed tabs.
 
 ### Components
 
 | Component | Imports From | Props/Events |
 |-----------|-------------|--------------|
-| **Header** | settingsStore (`settings`, `toggleTheme`), i18nStore (`t`, `setLocale`), weatherStore (`weather`), weatherHelpers (`getWeatherEmoji`), constants (`SUPPORTED_LOCALES`), LocationPicker, RadiusSlider | dispatches `opensettings` CustomEvent |
+| **Header** | settingsStore (`settings`, `toggleTheme`), i18nStore (`t`, `setLocale`), weatherStore (`weather`, `getSelectedBaseWeather`), weatherHelpers (`getWeatherEmoji`), constants (`SUPPORTED_LOCALES`), LocationPicker, RadiusSlider | dispatches `opensettings` / `refreshweather` CustomEvents |
 | **Map** | settingsStore (`settings`), weatherStore (`weather`), constants (`MAP_DEFAULTS`, `MAP_ATTRIBUTION`), mapHelpers (`getTileUrl`, `getQualityColor`, `formatDriveTime`), weatherHelpers (`getWeatherEmoji`), routingService (`fetchIsochrone`) | exports `centerOnDestination()`, `getMap()`, `getLeaflet()` |
-| **DestinationPanel** | i18nStore (`t`), weatherStore (`weather`, `toggleDay`, `setTimePeriod`), WeatherCard | props: `onSelectDestination` callback |
-| **WeatherCard** | i18nStore (`t`), weatherHelpers (`getWeatherEmoji`), scoringService (`getQualityInfo`), mapHelpers (`formatDriveTime`) | props: `destination`, `onclick` |
+| **DestinationPanel** | i18nStore (`t`), weatherStore (`weather`, `getSelectedBaseWeather`, `toggleDay`, `setTimePeriod`), settingsStore (`settings` for locale), WeatherCard | props: `onSelectDestination` callback |
+| **WeatherCard** | i18nStore (`t`), scoringService (`getQualityInfo`), mapHelpers (`formatDriveTime`) | props: `destination`, `loading`, `onclick` |
 | **LocationPicker** | settingsStore (`settings`), i18nStore (`t`), locationService (`geocodePlace`, `useGpsLocation`, `setActiveLocation`, `addSavedLocation`, `removeSavedLocation`), constants (`DEFAULT_LOCATION`) | props: `onclose` |
 | **RadiusSlider** | settingsStore (`settings`, `updateSetting`), i18nStore (`t`), constants (`RADIUS_OPTIONS`) | — |
 | **SettingsModal** | settingsStore (`settings`, `updateSetting`), i18nStore (`t`), locationService (`removeSavedLocation`), weatherStore (`recalculateScores`), constants (`DEFAULT_LOCATION`, `DEFAULT_WEIGHTS`) | props: `onclose` |
@@ -53,7 +53,7 @@
 | Store | State Shape | Imports | Exports |
 |-------|-------------|---------|---------|
 | **settingsStore** | `{ theme, locale, drivingRadiusMinutes, openRouteServiceKey, weights, savedLocations, activeLocationId }` | constants (`DEFAULT_*`) | `settings`, `applyTheme`, `toggleTheme`, `updateSetting`, `getActiveLocation` |
-| **weatherStore** | `{ base, destinations, loading, error, day, timePeriod }` | settingsStore, weatherService, weatherHelpers, scoringService | `weather`, `fetchBaseWeather`, `fetchDestinationWeather`, `toggleDay`, `setTimePeriod`, `recalculateScores` |
+| **weatherStore** | `{ base, dates, destinations, loading, error, day, timePeriod, lastFetched }` | settingsStore, weatherService, weatherHelpers, scoringService | `weather`, `loadForecast`, `getSelectedBaseWeather`, `toggleDay`, `setTimePeriod`, `recalculateScores` |
 | **i18nStore** | `{ locale, translations, loading }` | constants, settingsStore (`updateSetting`) | `i18n`, `initI18n`, `setLocale`, `t` |
 | **locationStore** | (stateless helper) | settingsStore, constants | `getActiveLocation` |
 
@@ -61,7 +61,7 @@
 
 | Service | Imports | External I/O | Exports |
 |---------|---------|-------------|---------|
-| **weatherService** | constants (`API_URLS`, `APP_INFO`, `CACHE_DURATIONS`), cacheService, weatherHelpers (`parseSMHI`, `parseYR`) | YR API, SMHI API | `detectRegion`, `fetchWeather`, `fetchWeatherBatch` |
+| **weatherService** | constants (`API_URLS`, `APP_INFO`, `CACHE_DURATIONS`), cacheService, weatherHelpers (`getForecastDates`, `parseSMHI`, `parseYR`) | YR API, SMHI API | `detectRegion`, `fetchWeather`, `fetchWeatherBatch` |
 | **destinationService** | constants (`API_URLS`, `CACHE_DURATIONS`, `DESTINATION_LIMITS`), cacheService, routingService (`haversineDistance`) | Overpass API | `discoverDestinations` |
 | **routingService** | settingsStore, constants (`API_URLS`, `CACHE_DURATIONS`), cacheService | OpenRouteService API | `fetchIsochrone`, `fetchDriveTime`, `estimateDriveTime`, `haversineDistance`, `queueDriveTime` |
 | **scoringService** | constants (`DEFAULT_WEIGHTS`, `QUALITY_COLORS`) | — (pure) | `calculateQualityScore`, `getQualityInfo` |
@@ -73,7 +73,7 @@
 | Module | Exports | Used By |
 |--------|---------|---------|
 | **constants.js** | `DEFAULT_LOCATION`, `RADIUS_OPTIONS`, `DEFAULT_RADIUS_MINUTES`, `WEATHER_THRESHOLDS`, `DEFAULT_WEIGHTS`, `QUALITY_COLORS`, `API_URLS`, `MAP_TILES`, `MAP_ATTRIBUTION`, `CACHE_DURATIONS`, `MAP_DEFAULTS`, `APP_INFO`, `DESTINATION_LIMITS`, `SUPPORTED_LOCALES`, `DEFAULT_LOCALE`, `THEMES`, `DEFAULT_THEME` | ALL stores, ALL services, some components |
-| **weatherHelpers.js** | `parseSMHI`, `parseYR`, `calculateDelta`, `isBadWeather`, `getWeatherEmoji` | weatherStore, weatherService, Map, Header, WeatherCard |
+| **weatherHelpers.js** | `getForecastDates`, `parseSMHI`, `parseYR`, `calculateDelta`, `isBadWeather`, `getWeatherEmoji` | App, weatherStore, weatherService, Map, Header |
 | **mapHelpers.js** | `getTileUrl`, `getQualityColor`, `createMarkerIcon`, `formatDriveTime` | Map, WeatherCard |
 | **types/index.js** | JSDoc typedefs only (Location, Destination, WeatherData, WeatherDelta, UserSettings, WeatherWeights) | Referenced via JSDoc `@param` / `@returns` annotations |
 
@@ -84,15 +84,16 @@
 ```
 1. User selects location / radius
    └─→ settingsStore.activeLocationId / drivingRadiusMinutes changes
-       └─→ App.svelte $effect() triggers loadWeatherData()
+       └─→ App.svelte $effect.pre() triggers loadWeatherData()
 
 2. loadWeatherData():
-   a) fetchBaseWeather()
-      └─→ weatherService.fetchWeather(lat, lon)
-          └─→ YR API (NetworkFirst cache strategy)
-          └─→ parseSMHI() or parseYR() → normalized {today, tomorrow} with allDay/morning/afternoon/evening
-          └─→ cacheService stores in localStorage (30min TTL)
-      └─→ weather.base = result
+   a) loadForecast() clears previous base, dates/age, and destinations; stops if there is no location
+      └─→ weatherService.fetchWeather(lat, lon, dates, isCurrent)
+          └─→ Valid cache hit retains fetchedAt; otherwise fetch the provider with no-store
+          └─→ parseSMHI() or parseYR() → nullable exact-date/period aggregates
+          └─→ Cache under provider-rounded coordinates with the exact date pair (30min TTL)
+      └─→ Publish base and retrieval timestamp only for the current load
+      └─→ Stop if base fetch failed or neither date has usable samples
 
    b) discoverDestinations(lat, lon, radiusKm)
       └─→ Overpass API POST (towns, beaches, nature reserves, attractions)
@@ -102,15 +103,15 @@
    c) estimateDriveTime() (haversine × 1.3 road factor, 70km/h)
       └─→ filter destinations within drivingRadiusMinutes
 
-   d) fetchDestinationWeather(withinRadius)
+   d) Fetch destination weather for withinRadius
       └─→ fetchWeatherBatch() — 5 concurrent workers
           └─→ For each: fetchWeather() → onResult callback
-              └─→ calculateDelta(baseWeather, destWeather)
+              └─→ Match the selected date and period at callback time, then calculateDelta()
               └─→ calculateQualityScore(delta, settings.weights)
       └─→ Sort destinations by qualityScore DESC
 
    e) [Optional] queueDriveTime() via ORS API (rate-limited 40 req/min)
-      └─→ Updates destinations[idx].driveTimeMinutes with real values
+      └─→ Updates a destination only if this load still owns state
 ```
 
 ### Secondary Pipeline: Day/Period Toggle → Recalculate
@@ -119,8 +120,7 @@
 User toggles day (t key) or changes period (1-4 keys / dropdown)
 └─→ weatherStore.toggleDay() or setTimePeriod()
     └─→ recalculateScores()
-        └─→ getSelectedWeather(weather.base) for new day+period
-        └─→ For each destination: get dayData[period], calculateDelta, calculateQualityScore
+        └─→ Use the same date/period and score helper as progressive results
         └─→ Resort by score
 ```
 
@@ -204,7 +204,8 @@ t('key.path', {params}) → dot-notation lookup + string interpolation
 
 ### weather.base state shape
 ```js
-{ today: PeriodWeather, tomorrow: PeriodWeather }
+{ dates: { today: string, tomorrow: string }, today: PeriodWeather | null,
+  tomorrow: PeriodWeather | null, fetchedAt: number }
 ```
 
 ### Destination (enriched during pipeline)
@@ -218,8 +219,7 @@ t('key.path', {params}) → dot-notation lookup + string interpolation
   driveTimeMinutes: number | null,
   driveDistanceKm: number | null,
   isEstimate: boolean,
-  weatherToday: PeriodWeather | null,
-  weatherTomorrow: PeriodWeather | null,
+  forecast: Forecast | null,
   weather: WeatherData | null,   // current selected period
   delta: WeatherDelta | null,
   qualityScore: number | null (0-100)
@@ -228,15 +228,17 @@ t('key.path', {params}) → dot-notation lookup + string interpolation
 
 ### Cache Key Format (localStorage, prefix: 'we-cache-')
 ```
-weather:{lat2dec}:{lon2dec}  → {today, tomorrow} (30min TTL)
+weather:{lat4dec}:{lon4dec}  → {dates, fetchedAt, today, tomorrow} (30min TTL, exact local date pair)
 dest:{lat2dec}:{lon2dec}:{radiusKm2dec} → Destination[] (24h TTL)
 iso:{lat2dec}:{lon2dec}:{rangeSeconds2dec} → GeoJSON Feature (1h TTL)
-route:{fromLat}:{fromLon}:{toLat}:{toLon} → {durationMinutes, distanceKm, isEstimate} (1h TTL)
+route:v2:{fromLat}:{fromLon}:{toLat}:{toLon} → {durationMinutes, distanceKm, isEstimate} (1h TTL; exact coordinate strings as sent to ORS)
+Legacy rounded route keys are not read by routing requests; normal expiry cleanup is unchanged.
 ```
 
 ### Quality Score Formula
 ```
-score = clamp(weighted_sum * 100, 0, 100)
+score = round(clamp(weighted_sum / valid_weight_sum * 100, 0, 100))
+Only available factors with finite positive weights count; no valid weights yields 50.
 where:
   sunshineScore  = normalize(-delta.cloudCover, -100, 100)  * weights.sunshine
   precipScore    = normalize(-delta.precipitation, -20, 20) * weights.precipitation
@@ -248,17 +250,17 @@ where:
 ### Quality Color Bands
 | Band | Score Range | Color |
 |------|-------------|-------|
-| Great | 80-100 | #00b894 |
-| Moderate | 50-79 | #fdcb6e |
-| Marginal | 20-49 | #e17055 |
-| Worse | 0-19 | #d63031 |
+| Much better | 65-100 | #00b894 |
+| Better | 56-64 | #55a630 |
+| Similar | 45-55 | #fdcb6e |
+| Worse | 0-44 | #d63031 |
 
 ## External API Contracts
 
 | API | URL | Method | Cache Strategy | Rate Limit |
 |-----|-----|--------|----------------|------------|
-| **YR (MET Norway)** | `api.met.no/weatherapi/locationforecast/2.0/compact?lat=X&lon=Y` | GET (User-Agent required) | NetworkFirst, 30min | None stated |
-| **SMHI** | `opendata-download-metfcst.smhi.se/.../lon/X/lat/Y/data.json` | GET | NetworkFirst, 30min | None (currently 404) |
+| **YR (MET Norway)** | `api.met.no/weatherapi/locationforecast/2.0/compact?lat=X&lon=Y` | GET (User-Agent required) | App-level 30min; fetch `no-store` | None stated |
+| **SMHI** | `opendata-download-metfcst.smhi.se/.../lon/X/lat/Y/data.json` | GET | App-level 30min; fetch `no-store` | None (currently 404) |
 | **Overpass** | `overpass-api.de/api/interpreter` | POST (form body) | App-level 24h | Fair use |
 | **OpenRouteService** | `api.openrouteservice.org/v2/...` | GET/POST (Auth header) | App-level 1h | 40 req/min, 500/day free |
 | **Nominatim** | `nominatim.openstreetmap.org/search` | GET | None (app-level debounce) | 1 req/sec |
@@ -284,7 +286,7 @@ where:
 - `settings.openRouteServiceKey` → routingService (enables ORS calls), Map isochrone
 
 ### If you change weatherStore:
-- `weather.base` → Header base weather display, fetchDestinationWeather prerequisite
+- `weather.base` → Header base weather display, destination scoring prerequisite
 - `weather.destinations` → DestinationPanel list, Map markers $effect
 - `weather.day` → recalculateScores, DestinationPanel dayLabel
 - `weather.timePeriod` → recalculateScores, DestinationPanel period select
@@ -293,11 +295,11 @@ where:
 ### If you change weatherHelpers:
 - `parseSMHI` / `parseYR` → weatherService (response parsing), affects ALL downstream weather data
 - `calculateDelta` → weatherStore (score pipeline), MUST match WeatherDelta typedef
-- `getWeatherEmoji` → Header, Map popup, WeatherCard
+- `getWeatherEmoji` → Header and Map popup
 
 ### If you change scoringService:
 - `calculateQualityScore` → weatherStore (destinations scoring), Map marker colors
-- `getQualityInfo` → WeatherCard (quality dot + label)
+- `getQualityInfo` → WeatherCard (quality dot + translated label) and `mapHelpers.getQualityColor`
 
 ### If you change routingService:
 - `haversineDistance` → destinationService (distance filter), routingService (estimate)
@@ -311,7 +313,7 @@ where:
 
 ### If you change cacheService:
 - `buildCacheKey` → ALL services using cache (weather, dest, iso, route keys must stay consistent)
-- Cache validation logic (e.g., `!data.today?.allDay` check) → weather data freshness
+- Weather envelope validation is in `weatherService`; refresh clears old and current weather keys.
 
 ### If you change types/index.js:
 - WeatherData shape → parseSMHI, parseYR, calculateDelta, UI display
@@ -328,8 +330,8 @@ where:
 - **Vite PWA plugin** with `autoUpdate` registration
 - **Service worker caching:**
   - Map tiles (CacheFirst, 500 entries, 7 days)
-  - SMHI weather (NetworkFirst, 50 entries, 30min)
-  - YR weather (NetworkFirst, 50 entries, 30min)
+  - No weather provider routes; an older installed worker may intercept until the new worker controls the page.
+- **Test gate:** `npm test` (Node built-in runner) after `npm ci` and before the Pages build; also before local deploy-helper build.
 - **Base URL:** `./` (relative, for GitHub Pages)
 - **Leaflet:** loaded dynamically via `import('leaflet')` in Map.svelte
 - **Tailwind CSS v4** via Vite plugin

@@ -5,6 +5,29 @@ function toLocalDateStr(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
+export function getForecastDates(now = new Date()) {
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return { today: toLocalDateStr(now), tomorrow: toLocalDateStr(tomorrow) };
+}
+
+function aggregateForecast(entries, timeOf, aggregatePeriod, dates) {
+  function day(date) {
+    const samples = entries.filter(entry => {
+      const time = timeOf(entry);
+      return typeof time === 'string' && toLocalDateStr(new Date(time)) === date;
+    });
+    const allDay = aggregatePeriod(samples);
+    if (!allDay) return null;
+    const period = (start, end) => aggregatePeriod(samples.filter(entry => {
+      const hour = new Date(timeOf(entry)).getHours();
+      return hour >= start && hour < end;
+    }));
+    return { allDay, morning: period(6, 12), afternoon: period(12, 18), evening: period(18, 24) };
+  }
+  return { today: day(dates.today), tomorrow: day(dates.tomorrow) };
+}
+
 // === SMHI Condition Symbol Mapping (Wsymb2: 1-27) ===
 const SMHI_SYMBOLS = {
   1: 'clear', 2: 'nearly_clear', 3: 'partly_cloudy', 4: 'partly_cloudy',
@@ -34,57 +57,30 @@ const SMHI_TEXT = {
  * Parse SMHI forecast response into normalized WeatherData for today & tomorrow.
  * SMHI timeSeries has hourly data. We aggregate per day with period breakdowns.
  * @param {object} data - Raw SMHI API response
- * @returns {{ today: import('../types/index.js').PeriodWeather, tomorrow: import('../types/index.js').PeriodWeather }}
+ * @returns {import('../types/index.js').ForecastDays}
  */
-export function parseSMHI(data) {
-  const timeSeries = data?.timeSeries ?? [];
-  const now = new Date();
-  const todayStr = toLocalDateStr(now);
-  const tomorrowDate = new Date(now);
-  tomorrowDate.setDate(tomorrowDate.getDate() + 1);
-  const tomorrowStr = toLocalDateStr(tomorrowDate);
-
-  const todayEntries = timeSeries.filter(ts => toLocalDateStr(new Date(ts.validTime)) === todayStr);
-  const tomorrowEntries = timeSeries.filter(ts => toLocalDateStr(new Date(ts.validTime)) === tomorrowStr);
-
-  return {
-    today: aggregateSMHIDay(todayEntries.length ? todayEntries : timeSeries.slice(0, 8)),
-    tomorrow: aggregateSMHIDay(tomorrowEntries.length ? tomorrowEntries : timeSeries.slice(8, 16))
-  };
-}
-
-/**
- * Aggregate a day's SMHI entries into allDay + morning/afternoon/evening periods.
- */
-function aggregateSMHIDay(entries) {
-  const morning = entries.filter(ts => { const h = new Date(ts.validTime).getHours(); return h >= 6 && h < 12; });
-  const afternoon = entries.filter(ts => { const h = new Date(ts.validTime).getHours(); return h >= 12 && h < 18; });
-  const evening = entries.filter(ts => { const h = new Date(ts.validTime).getHours(); return h >= 18 && h < 24; });
-
-  return {
-    allDay: aggregateSMHIPeriod(entries),
-    morning: morning.length ? aggregateSMHIPeriod(morning) : null,
-    afternoon: afternoon.length ? aggregateSMHIPeriod(afternoon) : null,
-    evening: evening.length ? aggregateSMHIPeriod(evening) : null
-  };
+export function parseSMHI(data, dates = getForecastDates()) {
+  const entries = Array.isArray(data?.timeSeries) ? data.timeSeries : [];
+  return aggregateForecast(entries, entry => entry?.validTime, aggregateSMHIPeriod, dates);
 }
 
 function aggregateSMHIPeriod(entries) {
-  if (!entries.length) return createEmptyWeather('smhi');
-
   let tempSum = 0, precipSum = 0, cloudSum = 0, windSum = 0;
-  let symbol = 1;
+  let symbol, n = 0;
 
   for (const entry of entries) {
-    const params = Object.fromEntries(entry.parameters.map(p => [p.name, p.values[0]]));
-    tempSum += params.t ?? 0;
-    precipSum += params.pmean ?? 0;
-    cloudSum += params.tcc_mean ?? 0;
-    windSum += params.ws ?? 0;
+    if (!Array.isArray(entry.parameters)) continue;
+    const params = Object.fromEntries(entry.parameters.map(p => [p?.name, p?.values?.[0]]));
+    if (![params.t, params.pmean, params.tcc_mean, params.ws].every(Number.isFinite)) continue;
+    n++;
+    tempSum += params.t;
+    precipSum += params.pmean;
+    cloudSum += params.tcc_mean;
+    windSum += params.ws;
     if (params.Wsymb2) symbol = params.Wsymb2;
   }
 
-  const n = entries.length;
+  if (!n) return null;
   const conditionCode = SMHI_SYMBOLS[symbol] ?? 'unknown';
   const precipitation = Math.round(precipSum * 10) / 10;
 
@@ -98,7 +94,6 @@ function aggregateSMHIPeriod(entries) {
     conditionText: SMHI_TEXT[conditionCode] ?? conditionCode,
     confidence: null,
     source: 'smhi',
-    fetchedAt: new Date().toISOString(),
     precipitationType: categorizePrecipitation(precipitation, n)
   };
 }
@@ -107,66 +102,37 @@ function aggregateSMHIPeriod(entries) {
  * Parse YR compact forecast response into normalized WeatherData.
  * Returns allDay average plus morning/afternoon/evening breakdowns.
  * @param {object} data - Raw YR API response
- * @returns {{ today: import('../types/index.js').PeriodWeather, tomorrow: import('../types/index.js').PeriodWeather }}
+ * @returns {import('../types/index.js').ForecastDays}
  */
-export function parseYR(data) {
-  const timeseries = data?.properties?.timeseries ?? [];
-  const now = new Date();
-  const todayStr = toLocalDateStr(now);
-  const tomorrowDate = new Date(now);
-  tomorrowDate.setDate(tomorrowDate.getDate() + 1);
-  const tomorrowStr = toLocalDateStr(tomorrowDate);
-
-  const todayEntries = timeseries.filter(ts => toLocalDateStr(new Date(ts.time)) === todayStr);
-  const tomorrowEntries = timeseries.filter(ts => toLocalDateStr(new Date(ts.time)) === tomorrowStr);
-
-  return {
-    today: aggregateYRDay(todayEntries.length ? todayEntries : timeseries.slice(0, 8)),
-    tomorrow: aggregateYRDay(tomorrowEntries.length ? tomorrowEntries : timeseries.slice(8, 16))
-  };
-}
-
-/**
- * Aggregate a day's YR entries into allDay + morning/afternoon/evening periods.
- * Morning: 06-12, Afternoon: 12-18, Evening: 18-24.
- * @param {Array} entries - YR timeseries entries for a single day
- * @returns {{ allDay: object, morning: object, afternoon: object, evening: object }}
- */
-function aggregateYRDay(entries) {
-  const morning = entries.filter(ts => { const h = new Date(ts.time).getHours(); return h >= 6 && h < 12; });
-  const afternoon = entries.filter(ts => { const h = new Date(ts.time).getHours(); return h >= 12 && h < 18; });
-  const evening = entries.filter(ts => { const h = new Date(ts.time).getHours(); return h >= 18 && h < 24; });
-
-  return {
-    allDay: aggregateYRPeriod(entries),
-    morning: morning.length ? aggregateYRPeriod(morning) : null,
-    afternoon: afternoon.length ? aggregateYRPeriod(afternoon) : null,
-    evening: evening.length ? aggregateYRPeriod(evening) : null
-  };
+export function parseYR(data, dates = getForecastDates()) {
+  const timeseries = data?.properties?.timeseries;
+  const entries = Array.isArray(timeseries) ? timeseries : [];
+  return aggregateForecast(entries, entry => entry?.time, aggregateYRPeriod, dates);
 }
 
 function aggregateYRPeriod(entries) {
-  if (!entries.length) return createEmptyWeather('yr');
-
   let tempSum = 0, precipSum = 0, cloudSum = 0, windSum = 0, uvSum = 0, uvCount = 0;
-  let symbol = 'clearsky_day';
+  let symbol = 'unknown', n = 0;
 
   for (const entry of entries) {
     const instant = entry.data?.instant?.details ?? {};
     const next1h = entry.data?.next_1_hours ?? entry.data?.next_6_hours ?? {};
+    const precip = next1h.details?.precipitation_amount;
 
-    tempSum += instant.air_temperature ?? 0;
-    precipSum += next1h?.details?.precipitation_amount ?? 0;
-    cloudSum += instant.cloud_area_fraction ?? 0;
-    windSum += instant.wind_speed ?? 0;
-    if (instant.ultraviolet_index_clear_sky != null) {
+    if (![instant.air_temperature, precip, instant.cloud_area_fraction, instant.wind_speed].every(Number.isFinite)) continue;
+    n++;
+    tempSum += instant.air_temperature;
+    precipSum += precip;
+    cloudSum += instant.cloud_area_fraction;
+    windSum += instant.wind_speed;
+    if (Number.isFinite(instant.ultraviolet_index_clear_sky)) {
       uvSum += instant.ultraviolet_index_clear_sky;
       uvCount++;
     }
-    if (next1h?.summary?.symbol_code) symbol = next1h.summary.symbol_code;
+    if (typeof next1h.summary?.symbol_code === 'string') symbol = next1h.summary.symbol_code;
   }
 
-  const n = entries.length;
+  if (!n) return null;
   const precipitation = Math.round(precipSum * 10) / 10;
 
   return {
@@ -179,7 +145,6 @@ function aggregateYRPeriod(entries) {
     conditionText: yrSymbolToText(symbol),
     confidence: null,
     source: 'yr',
-    fetchedAt: new Date().toISOString(),
     precipitationType: categorizePrecipitation(precipitation, n)
   };
 }
@@ -241,15 +206,6 @@ export function isBadWeather(weather) {
     weather.cloudCover > WEATHER_THRESHOLDS.cloudCoverBad ||
     weather.temperature < WEATHER_THRESHOLDS.tempSingleDigit
   );
-}
-
-function createEmptyWeather(source) {
-  return {
-    temperature: 0, precipitation: 0, cloudCover: 0, windSpeed: 0,
-    uvIndex: null, conditionCode: 'unknown', conditionText: 'No data',
-    confidence: null, source, fetchedAt: new Date().toISOString(),
-    precipitationType: 'none'
-  };
 }
 
 /**

@@ -9,6 +9,7 @@
     "language": "Språk"
   },
   "location": {
+    "selectLocation": "Välj en basplats",
     "current": "Nuvarande plats",
     "saved": "Sparade platser",
     "add": "Lägg till plats",
@@ -23,6 +24,9 @@
     "hours": "{value} tim"
   },
   "weather": {
+    "retrievedAt": "Basprognos hämtad: {value}",
+    "loading": "Hämtar prognos…",
+    "unavailable": "Ingen prognos för det här valet",
     "temperature": "Temperatur",
     "precipitation": "Nederbörd",
     "cloudCover": "Molnighet",
@@ -41,12 +45,13 @@
     "cloudier": "+{value}%"
   },
   "quality": {
-    "great": "Utmärkt",
-    "moderate": "Måttlig",
-    "marginal": "Marginell",
+    "muchBetter": "Mycket bättre",
+    "better": "Bättre",
+    "similar": "Liknande",
     "worse": "Sämre"
   },
   "destinations": {
+    "noForecast": "Inga prognoser för destinationerna för det här valet.",
     "title": "Destinationer",
     "empty": "Inga destinationer hittades. Justera radie eller plats.",
     "loading": "Söker platser med bättre väder...",
@@ -92,6 +97,7 @@
     "afternoon": "Eftermiddag",
     "evening": "Kväll",
     "periodLabel": "Tid på dagen",
+    "noDataForDate": "Ingen basprognos för det här datumet.",
     "noDataForPeriod": "Ingen prognos för denna tidsperiod. Prova Hela dagen eller en framtida period.",
     "minutes": "min",
     "hours": "tim"

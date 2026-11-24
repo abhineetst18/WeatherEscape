@@ -41,22 +41,6 @@ export default defineConfig({
               cacheName: 'map-tiles',
               expiration: { maxEntries: 500, maxAgeSeconds: 7 * 24 * 60 * 60 }
             }
-          },
-          {
-            urlPattern: /^https:\/\/opendata-download-metfcst\.smhi\.se\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'smhi-weather',
-              expiration: { maxEntries: 50, maxAgeSeconds: 30 * 60 }
-            }
-          },
-          {
-            urlPattern: /^https:\/\/api\.met\.no\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'yr-weather',
-              expiration: { maxEntries: 50, maxAgeSeconds: 30 * 60 }
-            }
           }
         ]
       }

@@ -1,6 +1,6 @@
 <script>
   import { t } from '../stores/i18nStore.svelte.js';
-  import { weather, toggleDay, setTimePeriod, fetchDestinationWeather } from '../stores/weatherStore.svelte.js';
+  import { weather, toggleDay, setTimePeriod, getSelectedBaseWeather } from '../stores/weatherStore.svelte.js';
   import { settings } from '../stores/settingsStore.svelte.js';
   import WeatherCard from './WeatherCard.svelte';
 
@@ -11,18 +11,15 @@
   let weatherFilter = $state('none');
 
   const dayLabel = $derived(weather.day === 'today' ? t('time.today') : t('time.tomorrow'));
+  const selectedDate = $derived(weather.dates?.[weather.day]);
+  const selectedBase = $derived(getSelectedBaseWeather());
   const destinations = $derived(weather.destinations ?? []);
   const isLoading = $derived(weather.loading);
   const scoredCount = $derived(destinations.filter(d => d.qualityScore != null).length);
-  const lastUpdatedLabel = $derived(weather.lastFetched ? formatTimeAgo(weather.lastFetched) : '');
-
-  function formatTimeAgo(timestamp) {
-    const diffSec = Math.round((Date.now() - timestamp) / 1000);
-    if (diffSec < 60) return 'just now';
-    const mins = Math.floor(diffSec / 60);
-    if (mins < 60) return `${mins}m ago`;
-    return `${Math.floor(mins / 60)}h ago`;
-  }
+  const fetchedTime = $derived(weather.lastFetched === null ? null : new Date(weather.lastFetched));
+  const lastUpdatedLabel = $derived(fetchedTime
+    ? t('weather.retrievedAt', { value: fetchedTime.toLocaleString(settings.locale) })
+    : '');
 
   /** @type {Array<{value: string, label: string}>} */
   const periodOptions = $derived([
@@ -67,7 +64,7 @@
     return list;
   });
 
-  const hasWeatherData = $derived(filteredDestinations.some(d => d.weather != null));
+  const hasWeatherData = $derived(destinations.some(d => d.weather != null));
 </script>
 
 <aside class="panel" class:collapsed={!expanded}>
@@ -79,7 +76,7 @@
         <span class="count">({scoredCount})</span>
       {/if}
       {#if lastUpdatedLabel}
-        <span class="last-updated">· {lastUpdatedLabel}</span>
+        <time class="last-updated" datetime={fetchedTime?.toISOString()}>· {lastUpdatedLabel}</time>
       {/if}
     </span>
     <span class="toggle-icon">{expanded ? '▼' : '▲'}</span>
@@ -91,7 +88,7 @@
       <div class="panel-controls">
         <!-- Day toggle -->
         <button class="day-toggle" onclick={handleToggleDay}>
-          {dayLabel}
+          {dayLabel}{#if selectedDate} · <time datetime={selectedDate}>{selectedDate}</time>{/if}
         </button>
 
         <select class="control-select period-select" value={weather.timePeriod} onchange={handlePeriodChange} aria-label={t('time.periodLabel')}>
@@ -124,19 +121,27 @@
       </div>
 
       <!-- Destination list -->
-      {#if isLoading}
+      {#if weather.error}
+        <div class="empty-state"><p class="empty-text">{t(weather.error)}</p></div>
+      {:else if weather.base && !weather.base[weather.day]}
+        <div class="empty-state"><p class="empty-text">{t('time.noDataForDate')}</p></div>
+      {:else if weather.base && !selectedBase}
+        <div class="empty-state"><p class="empty-text">{t('time.noDataForPeriod')}</p></div>
+      {:else if isLoading && !hasWeatherData}
         <div class="loading-state">
           <p>⏳ {t('destinations.loading')}</p>
         </div>
-      {:else if filteredDestinations.length > 0 && !hasWeatherData && weather.timePeriod !== 'allDay'}
+      {:else if !weather.base}
+        <div class="empty-state"><p class="empty-text">{t('location.selectLocation')}</p></div>
+      {:else if destinations.length > 0 && !hasWeatherData}
         <div class="empty-state">
           <p class="empty-icon">🕐</p>
-          <p class="empty-text">{t('time.noDataForPeriod')}</p>
+          <p class="empty-text">{t('destinations.noForecast')}</p>
         </div>
       {:else if filteredDestinations.length > 0}
         <div class="card-list">
           {#each filteredDestinations as dest (dest.id)}
-            <WeatherCard destination={dest} onclick={onSelectDestination} />
+            <WeatherCard destination={dest} loading={isLoading} onclick={onSelectDestination} />
           {/each}
         </div>
       {:else}

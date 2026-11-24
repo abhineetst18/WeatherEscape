@@ -34,9 +34,20 @@
  * @property {string} conditionText - Human-readable condition (localized)
  * @property {number | null} confidence - Forecast confidence percentage (SMHI)
  * @property {'smhi' | 'yr'} source - Which API provided this data
- * @property {string} fetchedAt - ISO timestamp of data fetch
  * @property {'burst' | 'spread' | 'none'} precipitationType - Precipitation pattern
  */
+
+/**
+ * @typedef {Object} PeriodWeather
+ * @property {WeatherData} allDay - Aggregate of available samples on this date
+ * @property {WeatherData | null} morning
+ * @property {WeatherData | null} afternoon
+ * @property {WeatherData | null} evening
+ */
+
+/** @typedef {{today: string, tomorrow: string}} ForecastDates Browser-local YYYY-MM-DD dates */
+/** @typedef {{today: PeriodWeather | null, tomorrow: PeriodWeather | null}} ForecastDays */
+/** @typedef {ForecastDays & {dates: ForecastDates, fetchedAt: number}} Forecast App retrieval time in epoch milliseconds, not provider issuance */
 
 /**
  * @typedef {Object} WeatherDelta

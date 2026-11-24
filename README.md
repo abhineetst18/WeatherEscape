@@ -21,7 +21,7 @@ The app runs entirely in the browser, requires no backend, and installs as a PWA
 - **Configurable score weights** — adjust the relative importance of each weather factor in Settings
 - **Multi-language** — English, Swedish, Norwegian, Danish (locale files in `public/locales/`)
 - **Dark and light themes** — theme-aware CARTO map tiles switch automatically
-- **Installable PWA** — service worker caches map tiles for 7 days and weather data for 30 minutes; app works offline after first load
+- **Installable PWA** — the service worker caches the app shell and map tiles. Forecasts are cached separately by the app for up to 30 minutes, only for the same local date pair and provider-rounded coordinates.
 - **WCAG 2.1 AA accessible** — keyboard-navigable, screen-reader compatible, sufficient colour contrast
 
 ## Tech Stack
@@ -130,14 +130,18 @@ WeatherEscape/
 | Wind speed | 10% | Calmer = higher score |
 | UV index | 5% | Higher UV = higher score |
 
-Weights are configurable per session in Settings.
+Weights are configurable in Settings. Available factors with positive weights are normalized; missing UV is omitted. Identical forecasts and comparisons with no valid weights score 50.
 
 | Score | Marker colour | Meaning |
 |---|---|---|
-| 80–100 | Green | Significant improvement |
-| 50–79 | Yellow | Moderate improvement |
-| 20–49 | Orange | Marginal improvement |
-| 0–19 | Red | Worse or no improvement |
+| 65–100 | Green | Much better |
+| 56–64 | Light green | Better |
+| 45–55 | Yellow | Similar |
+| 0–44 | Red | Worse |
+
+Today and tomorrow use the browser's local dates. All Day aggregates available samples on the selected date, not necessarily a full 24 hours. Specific periods are shown only when there are usable samples for that date and period. The app does not invent missing observations or normalize uneven provider sampling, so totals can reflect different coverage. The retrieval timestamp is when the app received the base forecast, not when the provider issued it. A cache hit retains that timestamp.
+
+Provider fetches bypass the browser HTTP cache, and the current service worker does not cache provider responses. Offline, the app may still show a valid app-cached forecast; without one it reports a fetch failure. A previously installed service worker can still intercept provider requests until the new worker controls the page.
 
 ## Deployment
 
@@ -145,6 +149,7 @@ Weights are configurable per session in Settings.
 
 Add `CARTO_API_KEY` under **Settings → Secrets and variables → Actions**, then set
 **Settings → Pages → Build and deployment → Source** to **GitHub Actions**.
+Run `npm test` for the offline Node regression suite. The Pages workflow and local `npm run deploy` helper both gate the build on these tests.
 Pushes to `main` build and deploy automatically. The workflow passes `--base=./`
 to Vite so assets work under the GitHub Pages repository path.
 

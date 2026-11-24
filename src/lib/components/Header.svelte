@@ -4,12 +4,13 @@
   import { SUPPORTED_LOCALES } from '../utils/constants.js';
   import LocationPicker from './LocationPicker.svelte';
   import RadiusSlider from './RadiusSlider.svelte';
-  import { weather } from '../stores/weatherStore.svelte.js';
+  import { weather, getSelectedBaseWeather } from '../stores/weatherStore.svelte.js';
   import { getWeatherEmoji } from '../utils/weatherHelpers.js';
 
   const localeLabels = { en: 'EN', sv: 'SV', no: 'NO', da: 'DA' };
 
   let showLocationPicker = $state(false);
+  const w = $derived(getSelectedBaseWeather());
 
   function handleLocaleChange(e) {
     setLocale(e.target.value);
@@ -17,7 +18,7 @@
 
   function getActiveLocationName() {
     const loc = settings.savedLocations.find(l => l.id === settings.activeLocationId);
-    return loc?.name ?? 'Gothenburg';
+    return loc?.name ?? t('location.selectLocation');
   }
 </script>
 
@@ -39,25 +40,21 @@
       </div>
 
       <!-- Base weather summary (desktop) + mobile pill (mobile row 2) -->
-      {#if weather.base}
-        {@const dayData = weather.day === 'today' ? weather.base.today : weather.base.tomorrow}
-        {@const w = dayData?.[weather.timePeriod] ?? dayData?.allDay}
-        {#if w}
-          <span class="base-weather">
-            {getWeatherEmoji(w.conditionCode)} {w.temperature}°
-            {#if w.precipitation > 0}
-              <span class="base-detail">💧{w.precipitation}mm</span>
-            {/if}
-            {#if w.windSpeed != null}
-              <span class="base-detail">💨{w.windSpeed}m/s</span>
-            {/if}
-          </span>
-          <span class="mobile-base-weather">
-            {getWeatherEmoji(w.conditionCode)} <span class="temp">{w.temperature}°</span>
-            {#if w.precipitation > 0}<span class="detail">💧{w.precipitation}mm</span>{/if}
-            {#if w.windSpeed != null}<span class="detail">💨{w.windSpeed}m/s</span>{/if}
-          </span>
-        {/if}
+      {#if w}
+        <span class="base-weather">
+          {getWeatherEmoji(w.conditionCode)} {w.temperature}°
+          {#if w.precipitation > 0}
+            <span class="base-detail">💧{w.precipitation}mm</span>
+          {/if}
+          {#if w.windSpeed != null}
+            <span class="base-detail">💨{w.windSpeed}m/s</span>
+          {/if}
+        </span>
+        <span class="mobile-base-weather">
+          {getWeatherEmoji(w.conditionCode)} <span class="temp">{w.temperature}°</span>
+          {#if w.precipitation > 0}<span class="detail">💧{w.precipitation}mm</span>{/if}
+          {#if w.windSpeed != null}<span class="detail">💨{w.windSpeed}m/s</span>{/if}
+        </span>
       {/if}
     </div>
 
